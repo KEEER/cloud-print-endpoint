@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <title>Cloud Print</title>
+    <meta charset="utf8" />
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@material/card@3.2.0/dist/mdc.card.min.css" />
+  </head>
+  <body>
+  <div class="pad"></div>
+  <div id="code-area">
+    <div id="input" class="container">
+      <div class="pad"></div>
+      <span class="mdc-card mdc-card--outlined num" id="num0"></span>
+      <span class="mdc-card mdc-card--outlined num" id="num1"></span>
+      <span class="mdc-card mdc-card--outlined num" id="num2"></span>
+      <span class="mdc-card mdc-card--outlined num" id="num3"></span>
+      <div class="pad"></div>
+    </div>
+    <div class="container">
+      <div class="pad"></div>
+      <span id="filename"></span>
+      <div class="pad"></div>
+    </div>
+    <div class="container">
+      <div class="pad"></div>
+      <span id="tip" style="visibility: hidden;">请按回车键以继续</span>
+      <div class="pad"></div>
+    </div>
+  </div>
+  <div id="info-area" style="display: none;">
+    <div class="container">
+      <div class="pad"></div>
+      <div class="mdc-card mdc-card--outlined" id="info-card">
+        <div class="pad"></div>
+        <div id="info-image-frame">
+          <img id="info-image" />
+        </div>
+        <div id="info-text">
+          <h2 id="info-title"></h2>
+          <h4 id="info-subtitle"></h4>
+        </div>
+        <div class="pad"></div>
+      </div>
+      <div class="pad"></div>
+    </div>
+  </div>
+  <div class="pad"></div>
+  </body>
+  <script src="controls.js" type="module"></script>
+</html>

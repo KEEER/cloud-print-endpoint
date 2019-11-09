@@ -1,0 +1,37 @@
+{
+  "name": "endpoint",
+  "version": "0.0.0",
+  "description": "Cloud Print - Endpoint",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KEEER/cp-endpoint.git"
+  },
+  "keywords": [
+    "print",
+    "keeer"
+  ],
+  "author": "Alan-Liang",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/KEEER/cp-endpoint/issues"
+  },
+  "homepage": "https://github.com/KEEER/cp-endpoint#readme",
+  "dependencies": {
+    "dotenv": "^8.1.0",
+    "electron": "^7.0.0",
+    "electron-rebuild": "^1.8.6",
+    "esm": "^3.2.25",
+    "hummus": "^1.0.107",
+    "koa": "^2.8.1",
+    "koa-body": "^4.1.1",
+    "koa-logger": "^3.2.1",
+    "koa-router": "^7.4.0",
+    "node-native-printer": "^1.0.0-beta.5",
+    "strip-ansi": "^5.2.0",
+    "uuid": "^3.3.3"
+  }
+}

@@ -1,0 +1,75 @@
+body {
+  height: 100vh;
+  margin: 0;
+  background: #233233;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+.pad {
+  flex: auto;
+}
+
+.container {
+  display: flex;
+}
+
+.num {
+  width: 116px;
+  height: 128px;
+  font-size: 64px;
+  font-weight: 300;
+  text-align: center;
+  margin: 12px;
+  color: black;
+}
+
+.num::before, .num::after {
+  content: ' ';
+  flex: auto;
+}
+
+#filename {
+  font-size: 64px;
+  margin: 32px;
+  height: 67px;
+  font-weight: 200;
+}
+
+#tip {
+  font-size: 32px;
+  opacity: 0.6;
+}
+
+#info-card {
+  width: 50%;
+  height: 50vh;
+  display: flex;
+  flex-direction: row;
+  padding: 16px;
+  align-items: center;
+  color: black;
+}
+
+#info-image {
+  width: 128px;
+}
+
+#info-title {
+  font-size: 48px;
+  font-weight: 200;
+  margin: 16px 0;
+}
+
+#info-subtitle {
+  font-size: 32px;
+  opacity: 0.64;
+  font-weight: 200;
+  margin: 0;
+}
+
+#info-text {
+  padding: 0 16px;
+}
