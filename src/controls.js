@@ -1,9 +1,10 @@
 const { ipcRenderer } = require('electron')
+import { CODE_DIGITS } from './consts.js'
 
 const $ = function (name) { return document.querySelector(name) }
 
 const code = []
-const codeEls = [ $('#num0'), $('#num1'), $('#num2'), $('#num3') ]
+const codeEls = new Array(CODE_DIGITS).fill(null).map(( _v, i ) => $(`#num${i}`))
 const codeAreaEl = $('#code-area')
 const infoAreaEl = $('#info-area')
 const filenameEl = $('#filename')
@@ -12,8 +13,6 @@ const infoImageEl = $('#info-image')
 const infoTitleEl = $('#info-title')
 const infoSubtitleEl = $('#info-subtitle')
 
-const CODE_DIGITS = 4
-
 function clearCode () {
   code.length = 0
   for (let i = 0; i < codeEls.length; i++) {
@@ -21,13 +20,13 @@ function clearCode () {
   }
   hideFilename()
 }
-function showFilename (filename) {
+function showFilename (filename, tip) {
   filenameEl.innerText = filename
-  tipEl.style.visibility = ''
+  tipEl.innerText = tip
 }
 function hideFilename () {
   filenameEl.innerText = ''
-  tipEl.style.visibility = 'hidden'
+  tipEl.innerText = ''
 }
 function showInfo (imageSrc, title, subtitle) {
   infoImageEl.src = imageSrc
@@ -56,20 +55,6 @@ function hideInfo () {
   document.addEventListener('keydown', handleCode)
 }
 
-function sendPrintRequest () {
-  // TODO
-  return new Promise((resolve, reject) => {
-    ipcRenderer.once('print-reply', (_e, reply) => {
-      if (typeof reply !== 'boolean') return reject(reply)
-      if(reply) ipcRenderer.once('print-done', _e => {
-        showOnce('./img/done.svg', '打印完成！', '请按回车键以继续')
-      })
-      resolve(reply)
-    })
-    ipcRenderer.send('print', code)
-  })
-}
-
 function handleCode (e) {
   e.preventDefault()
   console.log('Pressed 0x' + e.keyCode.toString(16))
@@ -80,8 +65,7 @@ function handleCode (e) {
     codeEls[code.length].innerText = number
     code.push(number)
     if (code.length === CODE_DIGITS) {
-      const filename = 'File ' + code.join('') + '.pdf'
-      showFilename(filename)
+      ipcRenderer.send('print-preview', code.join(''))
     }
   }
   if (e.keyCode === 0x08 || e.keyCode === 0x2e) { // bksp
@@ -90,13 +74,8 @@ function handleCode (e) {
     code.pop()
     hideFilename()
   }
-  if (e.keyCode === 0x0d && code.length === 4) { // enter
-    sendPrintRequest().then(function (res) {
-      if (res) showInfo('./img/print.svg', '正在打印中，请稍候', '页面 1 / 1')
-      else showOnce('./img/error.svg', '未知错误', '请按回车键以继续')
-    }).catch(function (name) {
-      showOnce('./img/error.svg', '未知错误: ' + name, '请按回车键以继续')
-    })
+  if (e.keyCode === 0x0d && code.length === CODE_DIGITS) { // enter
+    ipcRenderer.send('print', code.join(''))
   }
 }
 
@@ -109,3 +88,9 @@ function handleError (e) {
 }
 
 document.addEventListener('keydown', handleCode)
+
+ipcRenderer.on('show-info', (_e, ...args) => showInfo(...args))
+  .on('show-once', (_e, ...args) => showOnce(...args))
+  .on('hide-info', hideInfo)
+  .on('show-filename', (_e, ...args) => showFilename(...args))
+  .on('hide-filename', hideFilename)
