@@ -1,5 +1,6 @@
 import { CODE_DIGITS } from './consts'
 import { createVerify } from 'crypto'
+import assert from 'assert'
 
 export function isValidCode (code) {
   if (typeof code !== 'string') return false
@@ -8,9 +9,20 @@ export function isValidCode (code) {
   return true
 }
 
-export function verify (pubKey, sign, ...data) {
+// TODO: load pubkey
+export function verify (sign, ...data) {
   const verify = createVerify('sha256')
   for (let d of data) verify.update(d)
   verify.end()
   return verify.verify(pubKey, sign, 'hex')
+}
+
+export class JobToken {
+  constructor ({ code, userid, sign, nonce }) {
+    assert(isValidCode(code), 'invalid code')
+    assert(isValidUserId(userid), 'invalid userid')
+    // TODO: validate nonce
+    assert(verify(sign, userid, code, nonce), 'invalid signature')
+    this.code = code, this.userid = userid, this.sign = sign, this.nonce = nonce
+  }
 }
