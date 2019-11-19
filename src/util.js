@@ -1,6 +1,7 @@
 import { CODE_DIGITS } from './consts'
 import { createVerify } from 'crypto'
 import assert from 'assert'
+import { networkInterfaces } from 'os'
 
 export function isValidCode (code) {
   if (typeof code !== 'string') return false
@@ -26,3 +27,5 @@ export class JobToken {
     this.code = code, this.userid = userid, this.sign = sign, this.nonce = nonce
   }
 }
+
+export const address = Object.values(networkInterfaces()).flat().filter(a => !a.internal && a.family === 'IPv4').map(a => a.address)[0]

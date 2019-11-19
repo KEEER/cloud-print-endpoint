@@ -1,6 +1,7 @@
 import Koa from 'koa'
 import KoaRouter from 'koa-router'
 import koaBody from 'koa-body'
+import session from 'koa-session'
 import logger from 'koa-logger'
 import uuid from 'uuid/v4'
 import log from './log'
@@ -10,8 +11,10 @@ import { spawn } from 'child_process'
 
 const app = new Koa()
 
+app.keys = [ process.env.SESSION_KEY ]
 app.use(logger(log))
    .use(koaBody({ multipart: true }))
+   .use(session({ key: process.env.SESSION_NAME || 'sess' }, app))
 
 const router = new KoaRouter()
 app.use(router.routes())
@@ -31,6 +34,7 @@ router.get('/', ctx => {
   <html>
     <body>
       <form action="/api/upload" enctype="multipart/form-data" method="post">
+      <textarea name="token"></textarea>
       <input type="file" name="files" multiple="multiple">
       <button type="submit">Upload</button>
     </body>
@@ -40,7 +44,10 @@ router.get('/', ctx => {
 const pathFromName = name => path.join(process.env.FILEDIR || '', name)
 
 router.post('/api/upload', async ctx => {
-  let files = ctx.request.files.files
+  let files = ctx.request.files.files, token = ctx.request.body.token
+  // TODO: validate token
+  if (!Array.isArray(ctx.session.tokens)) ctx.session.tokens = []
+  if (!ctx.session.tokens.map(t => t.sign).includes(token.sign)) ctx.session.tokens.push(token)
   files = Array.isArray(files) ? files : [ files ]
   if(!files.every(file => file && file.type === 'application/pdf')) {
     ctx.body = {
