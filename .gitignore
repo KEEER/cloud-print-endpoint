@@ -1,7 +1,8 @@
 files/*.pdf
 .env
 .vscode
-public.pem
+*.pem
+data
 
 # Logs
 logs

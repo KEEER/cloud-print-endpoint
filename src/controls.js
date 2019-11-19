@@ -1,6 +1,8 @@
 const { ipcRenderer } = require('electron')
 import { CODE_DIGITS } from './consts.js'
 
+// TODO: docs
+
 const $ = function (name) { return document.querySelector(name) }
 
 const code = []

@@ -1,34 +1,27 @@
 import Koa from 'koa'
 import KoaRouter from 'koa-router'
 import koaBody from 'koa-body'
-import session from 'koa-session'
 import logger from 'koa-logger'
 import uuid from 'uuid/v4'
 import log from './log'
 import path from 'path'
 import { createReadStream, createWriteStream } from 'fs'
 import { spawn } from 'child_process'
+import { pathFromName, JobToken } from './util'
+
+/** @see https://webgit.keeer.net/cloud-print/Documents/ */
 
 const app = new Koa()
 
-app.keys = [ process.env.SESSION_KEY ]
 app.use(logger(log))
    .use(koaBody({ multipart: true }))
-   .use(session({ key: process.env.SESSION_NAME || 'sess' }, app))
 
 const router = new KoaRouter()
 app.use(router.routes())
    .use(router.allowedMethods())
 
-router.get('/api/status', async ctx => {
-  ctx.status = 200
-  ctx.body = JSON.stringify({
-    running: true,
-    // TODO: printer status
-  })
-})
-
 router.get('/', ctx => {
+  // TODO
   ctx.body = `
   <!doctype html>
   <html>
@@ -41,13 +34,20 @@ router.get('/', ctx => {
   </html>`
 })
 
-const pathFromName = name => path.join(process.env.FILEDIR || '', name)
-
-router.post('/api/upload', async ctx => {
-  let files = ctx.request.files.files, token = ctx.request.body.token
+router.put('/job', async ctx => {
+  let files = ctx.request.files.files
   // TODO: validate token
-  if (!Array.isArray(ctx.session.tokens)) ctx.session.tokens = []
-  if (!ctx.session.tokens.map(t => t.sign).includes(token.sign)) ctx.session.tokens.push(token)
+  const token = new JobToken(ctx.request.body.token)
+  try {
+    await token.validate()
+    await token.writeNonce()
+  } catch (e) {
+    ctx.body = {
+      status: 1,
+      error: 'Invalid token',
+      response: null,
+    }
+  }
   files = Array.isArray(files) ? files : [ files ]
   if(!files.every(file => file && file.type === 'application/pdf')) {
     ctx.body = {
@@ -110,6 +110,26 @@ router.post('/api/upload', async ctx => {
     status: 0,
     response: names,
   }
+})
+
+router.post('/get-config', ctx => {
+  // TODO
+})
+
+router.post('/set-config', ctx => {
+  // TODO
+})
+
+router.post('/delete-job', ctx => {
+  // TODO
+})
+
+router.get('/status', async ctx => {
+  ctx.status = 200
+  ctx.body = JSON.stringify({
+    running: true,
+    // TODO: printer status
+  })
 })
 
 export function listen (port, host = '0.0.0.0') {
