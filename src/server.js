@@ -7,7 +7,8 @@ import log from './log'
 import path from 'path'
 import { createReadStream, createWriteStream } from 'fs'
 import { spawn } from 'child_process'
-import { pathFromName, JobToken } from './util'
+import { pathFromName, db } from './util'
+import JobToken from './job-token'
 
 /** @see https://webgit.keeer.net/cloud-print/Documents/ */
 
@@ -26,60 +27,68 @@ router.get('/', ctx => {
   <!doctype html>
   <html>
     <body>
-      <form action="/api/upload" enctype="multipart/form-data" method="post">
+      <form action="/job" enctype="multipart/form-data" method="post">
       <textarea name="token"></textarea>
-      <input type="file" name="files" multiple="multiple">
+      <input type="file" name="file">
       <button type="submit">Upload</button>
     </body>
   </html>`
 })
 
-router.put('/job', async ctx => {
-  let files = ctx.request.files.files
-  // TODO: validate token
-  const token = new JobToken(ctx.request.body.token)
+router.post('/job', async ctx => {
+  let file = ctx.request.files.file
+  const token = new JobToken(JSON.parse(ctx.request.body.token))
+  const { code } = token
   try {
     await token.validate()
     await token.writeNonce()
   } catch (e) {
-    ctx.body = {
+    log(`[WARN] bad token: ${e}`)
+    return ctx.body = {
       status: 1,
       error: 'Invalid token',
       response: null,
     }
   }
-  files = Array.isArray(files) ? files : [ files ]
-  if(!files.every(file => file && file.type === 'application/pdf')) {
-    ctx.body = {
+  if ((await db.find({ code })).length !== 0) {
+    return ctx.body = {
+      status: 1,
+      error: 'Code already using',
+      response: null,
+    }
+  }
+  if (Array.isArray(file)) {
+    return ctx.body = {
+      status: 1,
+      error: 'Only one file per code'
+    }
+  }
+  if(file.type !== 'application/pdf') {
+    return ctx.body = {
       status: 1,
       error: 'Not a PDF file',
       response: null,
     }
-    return
   }
-  const names = []
   let error = null
-  for (let file of files) {
-    const name = uuid() + '.pdf'
-    const stream = createWriteStream(pathFromName(name))
-    log(`[DEBUG] Uploading ${file.name} to ${name}`)
-    try {
-      await new Promise((resolve, reject) => {
-        createReadStream(file.path).pipe(stream).on('close', resolve).on('error', reject)
-      })
-    } catch (e) {
-      log(`[ERROR] Uploading file ${e.stack}`)
-      error = e
-      break
-    }
-    names.push({ file: file.name, name })
+  const name = uuid() + '.pdf'
+  const stream = createWriteStream(pathFromName(name))
+  log(`[DEBUG] Uploading ${file.name} to ${name}`)
+  try {
+    await new Promise((resolve, reject) => {
+      createReadStream(file.path).pipe(stream).on('close', resolve).on('error', reject)
+    })
+  } catch (e) {
+    log(`[ERROR] Uploading file ${e.stack}`)
+    error = e
   }
-  if(!error) for (let name of names) {
+  const info = { file: file.name, name, time: Date.now(), code }
+  if(!error) {
     try {
-      name.pageCount = await new Promise((resolve, reject) => {
+      info.pageCount = await new Promise((resolve, reject) => {
         setTimeout(reject, 2000)
-        const spawnArgs = [ 'node', [ path.resolve(__dirname, 'pdf'), pathFromName(name.name) ] ]
-        // log(`[DEBUG] starting parser with args ${spawnArgs[0]} ${spawnArgs[1].join(' ')}`)
+        const spawnArgs = [ 'node', [ path.resolve(__dirname, 'pdf'), pathFromName(info.name) ] ]
+        log(`[DEBUG] starting parser with args ${spawnArgs[0]} ${spawnArgs[1].join(' ')}`)
         const parser = spawn(...spawnArgs)
         parser.on('error', reject)
         parser.stdout.on('data', data => {
@@ -93,9 +102,8 @@ router.put('/job', async ctx => {
         })
       })
     } catch (e) {
-      log(`[ERROR] pdf parsing ${e.stack || JSON.stringify(e)}`)
+      log(`[WARN] pdf parsing ${e.stack || JSON.stringify(e)}`)
       error = e
-      break
     }
   }
   if (error) {
@@ -106,9 +114,10 @@ router.put('/job', async ctx => {
     }
     return
   }
+  db.insert(info)
   ctx.body = {
     status: 0,
-    response: names,
+    response: info,
   }
 })
 
