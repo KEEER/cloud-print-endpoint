@@ -7,8 +7,7 @@ import log from './log'
 import path from 'path'
 import { createReadStream, createWriteStream } from 'fs'
 import { spawn } from 'child_process'
-import { pathFromName, db } from './util'
-import JobToken from './job-token'
+import { pathFromName, db, getJobToken } from './util'
 
 /** @see https://webgit.keeer.net/cloud-print/Documents/ */
 
@@ -35,21 +34,9 @@ router.get('/', ctx => {
   </html>`
 })
 
-router.post('/job', async ctx => {
+router.post('/job', getJobToken, async ctx => {
   let file = ctx.request.files.file
-  const token = new JobToken(JSON.parse(ctx.request.body.token))
-  const { code } = token
-  try {
-    await token.validate()
-    await token.writeNonce()
-  } catch (e) {
-    log(`[WARN] bad token: ${e}`)
-    return ctx.body = {
-      status: 1,
-      error: 'Invalid token',
-      response: null,
-    }
-  }
+  const { code } = ctx.state.token
   if ((await db.find({ code })).length !== 0) {
     return ctx.body = {
       status: 1,
