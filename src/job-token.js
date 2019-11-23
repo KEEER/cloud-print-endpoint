@@ -63,7 +63,7 @@ export default class JobToken {
    * @async
    */
   async writeNonce () {
-    const res = await db.insert({ nonce: this.nonce })
+    const res = await db.insert({ nonce: this.nonce, time: Date.now() })
     log(`[DEBUG] used token ${this.nonce} for ${this.code}`)
     return res
   }

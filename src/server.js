@@ -8,6 +8,10 @@ import path from 'path'
 import { createReadStream, createWriteStream } from 'fs'
 import { spawn } from 'child_process'
 import { pathFromName, db, getJobToken } from './util'
+import { DEFAULT_CONFIG } from './consts'
+
+let printerMessage = '待命'
+let printerStatus = null
 
 /** @see https://webgit.keeer.net/cloud-print/Documents/ */
 
@@ -58,9 +62,9 @@ router.post('/job', getJobToken, async ctx => {
     }
   }
   let error = null
-  const name = uuid() + '.pdf'
-  const stream = createWriteStream(pathFromName(name))
-  log(`[DEBUG] Uploading ${file.name} to ${name}`)
+  const id = uuid() + '.pdf'
+  const stream = createWriteStream(pathFromName(id))
+  log(`[DEBUG] Uploading ${file.name} to ${id}`)
   try {
     await new Promise((resolve, reject) => {
       createReadStream(file.path).pipe(stream).on('close', resolve).on('error', reject)
@@ -69,12 +73,12 @@ router.post('/job', getJobToken, async ctx => {
     log(`[ERROR] Uploading file ${e.stack}`)
     error = e
   }
-  const info = { file: file.name, name, time: Date.now(), code }
+  const info = { file: file.name, id, time: Date.now(), code, config: { ...DEFAULT_CONFIG } }
   if(!error) {
     try {
       info.pageCount = await new Promise((resolve, reject) => {
         setTimeout(reject, 2000)
-        const spawnArgs = [ 'node', [ path.resolve(__dirname, 'pdf'), pathFromName(info.name) ] ]
+        const spawnArgs = [ 'node', [ path.resolve(__dirname, 'pdf'), pathFromName(info.id) ] ]
         log(`[DEBUG] starting parser with args ${spawnArgs[0]} ${spawnArgs[1].join(' ')}`)
         const parser = spawn(...spawnArgs)
         parser.on('error', reject)
@@ -89,7 +93,7 @@ router.post('/job', getJobToken, async ctx => {
         })
       })
     } catch (e) {
-      log(`[WARN] pdf parsing ${e.stack || JSON.stringify(e)}`)
+      log(`[WARN] pdf parsing ${e && e.stack || JSON.stringify(e)}`)
       error = e
     }
   }
@@ -102,13 +106,17 @@ router.post('/job', getJobToken, async ctx => {
     return
   }
   db.insert(info)
+  info['page-count'] = info.pageCount
+  delete info.pageCount
+  delete info.time
+  delete info.file
   ctx.body = {
     status: 0,
     response: info,
   }
 })
 
-router.post('/get-config', ctx => {
+router.post('/get-configs', ctx => {
   // TODO
 })
 
@@ -120,12 +128,14 @@ router.post('/delete-job', ctx => {
   // TODO
 })
 
-router.get('/status', async ctx => {
-  ctx.status = 200
-  ctx.body = JSON.stringify({
-    running: true,
-    // TODO: printer status
-  })
+router.get('/status', ctx => ctx.body = {
+  status: 0,
+  response: {
+    name: process.env.PRINTER_NAME,
+    geolocation: process.env.PRINTER_GEOLOCATION || null,
+    status: printerStatus, // TODO
+    message: printerMessage, // TODO
+  },
 })
 
 export function listen (port, host = '0.0.0.0') {

@@ -1,8 +1,9 @@
-import { CODE_DIGITS } from './consts'
+import { CODE_DIGITS, IP_UPDATE_INTERVAL, REMOTE_BASE, PRINTER_ID } from './consts'
 import { networkInterfaces } from 'os'
 import Datastore from 'nedb-promise'
+import fetch from 'node-fetch'
 import path from 'path'
-import JobToken from './job-token'
+import JobToken, { sign } from './job-token'
 import log from './log'
 
 /** Main database object. */
@@ -23,7 +24,35 @@ export function isValidCode (code) {
 }
 
 /** Network address of local machine. */
-export const address = Object.values(networkInterfaces()).flat().filter(a => !a.internal && a.family === 'IPv4').map(a => a.address)[0]
+export let ipAddress
+const updateIp = async () => {
+  const newIp = Object.values(networkInterfaces())
+    .flat()
+    .filter(a => !a.internal && a.family === 'IPv4')
+    .map(a => a.address)[0]
+  if (ipAddress !== newIp) {
+    // handle IP change
+    ipAddress = newIp
+    try {
+      const res = await fetch(new URL('/_api/printer-ip', REMOTE_BASE), {
+        method: 'post',
+        body: JSON.stringify({
+          id: PRINTER_ID, // TODO
+          ip: newIp,
+          sign: sign(PRINTER_ID.toString(), newIp),
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(res => res.json())
+      if(res.status !== 0) throw res
+    } catch (e) {
+      log(`[ERROR] updating ip: ${e}`)
+    }
+  }
+}
+setInterval(updateIp, IP_UPDATE_INTERVAL)
+updateIp()
 
 /**
  * Get a path to write to from the original filename, used to store uploaded files.

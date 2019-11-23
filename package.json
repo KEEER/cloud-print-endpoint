@@ -33,6 +33,7 @@
     "koa-router": "^7.4.0",
     "nedb": "^1.8.0",
     "nedb-promise": "^2.0.1",
+    "node-fetch": "^2.6.0",
     "node-native-printer": "^1.0.0-beta.5",
     "strip-ansi": "^5.2.0",
     "uuid": "^3.3.3"
