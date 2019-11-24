@@ -1,10 +1,13 @@
-import { createVerify, createSign } from 'crypto'
+/** @module job-token */
+
 import assert from 'assert'
-import { REMOTE_KEY, SIGN_HASH_METHOD, ENDPOINT_KEY, JOB_CLEAN_INTERVAL, JOB_TIMEOUT } from './consts'
-import { isValidCode, db, pathFromName } from './util'
-import log from './log'
+import { createVerify, createSign } from 'crypto'
 import { unlink as unlinkCb } from 'fs'
 import { promisify } from 'util'
+import { REMOTE_KEY, SIGN_HASH_METHOD, ENDPOINT_KEY, JOB_CLEAN_INTERVAL, JOB_TIMEOUT } from './consts'
+import log from './log'
+import { isValidCode, db, pathFromName } from './util'
+
 const unlink = promisify(unlinkCb)
 
 /**
@@ -33,7 +36,7 @@ export function sign (...data) {
 }
 
 /** class to represent a print job token. */
-export default class JobToken {
+export class JobToken {
   /**
    * Create a print job token object.
    * @param {string} options.code print code

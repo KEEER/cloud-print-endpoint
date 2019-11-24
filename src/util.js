@@ -1,9 +1,11 @@
-import { CODE_DIGITS, IP_UPDATE_INTERVAL, REMOTE_BASE, PRINTER_ID } from './consts'
+/** @module util */
+
 import { networkInterfaces } from 'os'
+import path from 'path'
 import Datastore from 'nedb-promise'
 import fetch from 'node-fetch'
-import path from 'path'
-import JobToken, { sign } from './job-token'
+import { CODE_DIGITS, IP_UPDATE_INTERVAL, REMOTE_BASE, PRINTER_ID } from './consts'
+import { sign, JobToken } from './job-token'
 import log from './log'
 
 /** Main database object. */
@@ -15,6 +17,7 @@ export const db = new Datastore({
 /**
  * Validates a print code.
  * @param {string} code code to validate
+ * @returns {boolean} whether the code is valid
  */
 export function isValidCode (code) {
   if (typeof code !== 'string') return false
@@ -25,6 +28,7 @@ export function isValidCode (code) {
 
 /** Network address of local machine. */
 export let ipAddress
+/** Check if IP has changed and report to remote server. */
 const updateIp = async () => {
   const newIp = Object.values(networkInterfaces())
     .flat()

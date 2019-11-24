@@ -1,3 +1,5 @@
+/** @module main */
+
 import { listen } from './server'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'

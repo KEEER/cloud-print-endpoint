@@ -1,7 +1,12 @@
+/**
+ * Module in renderer process to control FE.
+ * Use IPC to control this module.
+ * @module controls
+ */
+
+// native modules cannot be `import`ed
 const { ipcRenderer } = require('electron')
 import { CODE_DIGITS } from './consts.js'
-
-// TODO: docs
 
 const $ = function (name) { return document.querySelector(name) }
 
@@ -22,14 +27,37 @@ function clearCode () {
   }
   hideFilename()
 }
+
+/**
+ * Shows a message on the filename area.
+ * @param {string} filename Filename to be shown
+ * @param {string} tip Tip to be shown
+ * @example win.webContents.send('show-filename', 'Print.pdf', 'Press enter to continue')
+ * @example event.reply('show-filename', 'Print.pdf', 'Press enter to continue')
+ */
 function showFilename (filename, tip) {
   filenameEl.innerText = filename
   tipEl.innerText = tip
 }
+
+/**
+ * Hides the message on the filename area.
+ * @example win.webContents.send('hide-filename')
+ * @example event.reply('hide-filename')
+ */
 function hideFilename () {
   filenameEl.innerText = ''
   tipEl.innerText = ''
 }
+
+/**
+ * Shows an information card that cannot be cancelled by user input.
+ * @param {string} imageSrc `src` attribute of image, relative to `/src`
+ * @param {string} title title to be shown
+ * @param {string} subtitle subtitle to be shown
+ * @example win.webContents.send('show-info', './img/error.svg', 'Print Error', 'Out of paper')
+ * @example event.reply('show-info', './img/error.svg', 'Print Error', 'Out of paper')
+ */
 function showInfo (imageSrc, title, subtitle) {
   infoImageEl.src = imageSrc
   infoTitleEl.innerText = title
@@ -40,10 +68,25 @@ function showInfo (imageSrc, title, subtitle) {
 
   document.removeEventListener('keydown', handleCode)
 }
+
+/**
+ * Shows an information card that can be cancelled by user hitting enter.
+ * @param {string} imageSrc `src` attribute of image, relative to `/src`
+ * @param {string} title title to be shown
+ * @param {string} subtitle subtitle to be shown
+ * @example win.webContents.send('show-once', './img/done.svg', 'Print Done', 'Click enter to continue')
+ * @example event.reply('show-once', './img/done.svg', 'Print Done', 'Click enter to continue')
+ */
 function showOnce (imageSrc, title, subtitle) {
   showInfo(imageSrc, title, subtitle)
   document.addEventListener('keydown', handleError)
 }
+
+/**
+ * Hides information card.
+ * @example win.webContents.send('hide-info')
+ * @example event.reply('hide-info')
+ */
 function hideInfo () {
   infoImageEl.src = ''
   infoTitleEl.innerText = ''

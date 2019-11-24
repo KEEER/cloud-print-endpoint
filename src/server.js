@@ -1,19 +1,23 @@
+/**
+ * Server module.
+ * @module server
+ * @see https://webgit.keeer.net/cloud-print/Documents/
+ */
+
+import { spawn } from 'child_process'
+import { createReadStream, createWriteStream } from 'fs'
+import path from 'path'
 import Koa from 'koa'
-import KoaRouter from 'koa-router'
 import koaBody from 'koa-body'
 import logger from 'koa-logger'
+import KoaRouter from 'koa-router'
 import uuid from 'uuid/v4'
-import log from './log'
-import path from 'path'
-import { createReadStream, createWriteStream } from 'fs'
-import { spawn } from 'child_process'
-import { pathFromName, db, getJobToken } from './util'
 import { DEFAULT_CONFIG } from './consts'
+import log from './log'
+import { pathFromName, db, getJobToken } from './util'
 
 let printerMessage = '待命'
 let printerStatus = null
-
-/** @see https://webgit.keeer.net/cloud-print/Documents/ */
 
 const app = new Koa()
 
