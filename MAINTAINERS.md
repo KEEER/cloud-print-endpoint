@@ -17,6 +17,7 @@ documentation, please check out the
 - P: API path and method if present
 
 ## Documentation
+
 ```
 M: Alan Liang <a+keeer@keeer.net>
 S: In Progress
@@ -24,6 +25,7 @@ F: README.md
 ```
 
 ## Environment
+
 ```
 M: Alan Liang <a+keeer@keeer.net>
 S: Maintained
@@ -33,6 +35,7 @@ F: src/index.js
 ```
 
 ## Frontend
+
 ```
 M: Alan Liang <a+keeer@keeer.net>
 S: In Progress
@@ -44,6 +47,7 @@ F: src/styles.css
 ```
 
 ## Job Token
+
 ```
 M: Alan Liang <a+keeer@keeer.net>
 S: Maintained
@@ -51,6 +55,7 @@ F: src/job-token.js
 ```
 
 ## Logging
+
 ```
 M: Alan Liang <a+keeer@keeer.net>
 S: Maintained
@@ -58,6 +63,7 @@ F: src/log.js
 ```
 
 ## Print Control
+
 ```
 M: Alan Liang <a+keeer@keeer.net>
 S: Todo
@@ -65,6 +71,7 @@ T: git git://github.com/KEEER/node-native-printer.git
 ```
 
 ## Project Structure
+
 ```
 M: Alan Liang <a+keeer@keeer.net>
 S: Maintained
@@ -77,6 +84,7 @@ F: sample.env
 ```
 
 ## Scripts
+
 ```
 M: Alan Liang <a+keeer@keeer.net>
 S: Maintained
@@ -88,6 +96,7 @@ F: scripts/*
 See below.
 
 ### UploadFile
+
 ```
 P: POST /job
 M: Alan Liang <a+keeer@keeer.net>
@@ -96,30 +105,34 @@ F: src/server.js
 ```
 
 ### RequestJobConfigurations
+
 ```
 P: POST /get-configs
-M: 
+M: Andy Lee <andylizf@outlook.com>
 S: Todo
 F: src/server.js
 ```
 
 ### ModifyFileConfiguration
+
 ```
 P: POST /set-config
-M: 
+M: Andy Lee <andylizf@outlook.com>
 S: Todo
 F: src/server.js
 ```
 
 ### RemoveFile
+
 ```
 P: POST /delete-job
-M: 
+M: Andy Lee <andylizf@outlook.com>
 S: Todo
 F: src/server.js
 ```
 
 ### RequestStatus
+
 ```
 P: GET /status
 M: Alan Liang <a+keeer@keeer.net>
@@ -128,6 +141,7 @@ F: src/server.js
 ```
 
 ## The Rest
+
 ```
 M: Alan Liang <a+keeer@keeer.net>
 S: Orphan
