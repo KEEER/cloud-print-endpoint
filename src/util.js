@@ -1,5 +1,6 @@
 /** @module util */
 
+import { spawn } from 'child_process'
 import { networkInterfaces } from 'os'
 import path from 'path'
 import Datastore from 'nedb-promise'
@@ -56,7 +57,7 @@ const updateIp = async () => {
   }
 }
 setInterval(updateIp, IP_UPDATE_INTERVAL)
-updateIp()
+setTimeout(updateIp, 1)
 
 /**
  * Get a path to write to from the original filename, used to store uploaded files.
@@ -87,3 +88,28 @@ export async function getJobToken (ctx, next) {
   ctx.state.token = token
   return await next()
 }
+
+/**
+ * Executes script in seperated process and parses its response in JSON format.
+ * @async
+ * @param {string} script script path to be executed
+ * @param {string[]} args spawn arguments
+ * @param {number} [timeout] reject after this amount of time
+ */
+export const spawnScript = (script, args, timeout = 2000) => new Promise((resolve, reject) => {
+  setTimeout(reject, timeout)
+  const spawnArgs = [ 'node', [ path.resolve(__dirname, script), ...args ] ]
+  log(`[DEBUG] starting script with args ${spawnArgs[0]} ${spawnArgs[1].join(' ')}`)
+  const parser = spawn(...spawnArgs)
+  parser.on('error', reject)
+  parser.stdout.on('data', data => {
+    try {
+      data = JSON.parse(data)
+      if(data.status !== 0) throw data
+      return resolve(data.result)
+    } catch (e) {
+      log(`[WARN] script ${script} execution: ${e instanceof Error ? e : JSON.stringify(e)}`)
+      reject(e)
+    }
+  })
+})

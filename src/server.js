@@ -4,9 +4,7 @@
  * @see https://webgit.keeer.net/cloud-print/Documents/
  */
 
-import { spawn } from 'child_process'
 import { createReadStream, createWriteStream } from 'fs'
-import path from 'path'
 import Koa from 'koa'
 import koaBody from 'koa-body'
 import logger from 'koa-logger'
@@ -14,7 +12,7 @@ import KoaRouter from 'koa-router'
 import uuid from 'uuid/v4'
 import { DEFAULT_CONFIG } from './consts'
 import log from './log'
-import { pathFromName, db, getJobToken } from './util'
+import { pathFromName, db, getJobToken, spawnScript } from './util'
 
 let printerMessage = '待命'
 let printerStatus = null
@@ -80,22 +78,7 @@ router.post('/job', getJobToken, async ctx => {
   const info = { file: file.name, id, time: Date.now(), code, config: { ...DEFAULT_CONFIG } }
   if(!error) {
     try {
-      info.pageCount = await new Promise((resolve, reject) => {
-        setTimeout(reject, 2000)
-        const spawnArgs = [ 'node', [ path.resolve(__dirname, 'pdf'), pathFromName(info.id) ] ]
-        log(`[DEBUG] starting parser with args ${spawnArgs[0]} ${spawnArgs[1].join(' ')}`)
-        const parser = spawn(...spawnArgs)
-        parser.on('error', reject)
-        parser.stdout.on('data', data => {
-          try {
-            data = JSON.parse(data)
-            if(data.status !== 0) throw data
-            return resolve(data.result)
-          } catch (e) {
-            reject(e)
-          }
-        })
-      })
+      info.pageCount = await spawnScript('pdf', [ pathFromName(info.id) ])
     } catch (e) {
       log(`[WARN] pdf parsing ${e && e.stack || JSON.stringify(e)}`)
       error = e
