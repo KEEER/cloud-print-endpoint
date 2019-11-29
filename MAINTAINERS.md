@@ -66,8 +66,10 @@ F: src/log.js
 
 ```
 M: Alan Liang <a+keeer@keeer.net>
-S: Todo
+S: In Progress
 T: git git://github.com/KEEER/node-native-printer.git
+T: git git://github.com/KEEER/node-native-printer-dist.git
+F: src/print/*
 ```
 
 ## Project Structure
