@@ -69,7 +69,7 @@ M: Alan Liang <a+keeer@keeer.net>
 S: In Progress
 T: git git://github.com/KEEER/node-native-printer.git
 T: git git://github.com/KEEER/node-native-printer-dist.git
-F: src/print/*
+F: src/printer/*
 ```
 
 ## Project Structure

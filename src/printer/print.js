@@ -7,27 +7,20 @@
  * @param {string} printerName full printer name
  * @param {string} options CUPS options in JSON encoding
  * @param {string} filePath absolute file path
- * @returns {object} see abov4
+ * @returns {string} see above
  * @see https://www.cups.org/doc/options.html
- * @example node src/print/print HP_LaserJet_Professional_M1136_MFP '{"page-ranges":"1,2","num-copies":"4"}' files/9ae5326e-40b1-4c32-96ea-08756b0c0117.pdf
+ * @example node src/printer/print HP_LaserJet_Professional_M1136_MFP '{"page-ranges":"1,2","n":"4"}' files/9ae5326e-40b1-4c32-96ea-08756b0c0117.pdf
  */
 
 const printer = require('node-native-printer')
 
-const [ /* /usr/bin/node */, /* print/print */ , printerName, options, filePath ] = process.argv
+const printerName = require('./checkPrinterName')
+const [ /* /usr/bin/node */, /* src/printer/print */, /* printerName */, options, filePath ] = process.argv
 
-if(!printerName || !options || !filePath) {
+if(!options || !filePath) {
   console.log(JSON.stringify({
     status: 1,
     message: 'Wrong number of arguments',
-  }))
-  process.exit(1)
-}
-
-if (!printer.listPrinters().find(p => p.name === printerName)) {
-  console.log(JSON.stringify({
-    status: 1,
-    message: 'Printer not found',
   }))
   process.exit(1)
 }
