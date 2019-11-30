@@ -92,7 +92,7 @@ router.post('/job', getJobToken, async ctx => {
     }
     return
   }
-  db.insert(info)
+  await db.insert(info)
   info['page-count'] = info.pageCount
   delete info.pageCount
   delete info.time

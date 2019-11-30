@@ -28,3 +28,5 @@ export const IP_UPDATE_INTERVAL = 10 * 1000 // 10 secs
 export const REMOTE_BASE = process.env.REMOTE_BASE
 /** Cloud Print printer ID, for uploading IP to remote. */
 export const PRINTER_ID = parseInt(process.env.PRINTER_ID)
+/** After this seconds after issuing a job token is invalid. */
+export const JOB_TOKEN_TIMEOUT = 60 // 1 min

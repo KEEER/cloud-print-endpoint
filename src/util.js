@@ -75,7 +75,6 @@ export async function getJobToken (ctx, next) {
   const token = new JobToken(JSON.parse(ctx.request.body.token))
   try {
     await token.validate()
-    await token.writeNonce()
   } catch (e) {
     log(`[WARN] bad token: ${e}`)
     ctx.body = {

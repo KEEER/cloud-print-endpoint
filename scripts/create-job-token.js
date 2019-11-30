@@ -6,9 +6,8 @@ process.env.REMOTE_KEYFILE = process.env.ENDPOINT_KEYFILE = process.argv[3]
 const code = process.argv[2]
 
 const { sign } = require('esm')(module)('../src/job-token')
-const uuid = require('uuid/v4')
 
-const nonce = uuid()
-const signature = sign(code, nonce)
-console.log(JSON.stringify({ code, nonce, sign: signature }, null, 2))
+const timestamp = parseInt(Date.now() / 1000)
+const signature = sign(code, timestamp)
+console.log(JSON.stringify({ code, timestamp, sign: signature }, null, 2))
 process.exit(0)
