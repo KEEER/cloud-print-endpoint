@@ -1,3 +1,5 @@
+import { Configuration } from './util'
+
 /** @module consts */
 
 // use `require` to work in electron
@@ -17,11 +19,11 @@ export const JOB_CLEAN_INTERVAL = 60 * 1000 // 1 min
 /** Hong long is a job for since created. */
 export const JOB_TIMEOUT = 24 * 3600 * 1000 // 24 h
 /** Default configuration of jobs. */
-export const DEFAULT_CONFIG = Object.freeze({
+export const DEFAULT_CONFIG = Object.freeze(new Configuration({
   copies: parseInt(process.env.DEFAULT_COPIES) || 1,
   colored: process.env.DEFAULT_COLORED === 'true',
   'double-sided': process.env.DEFAULT_DOUBLE_SIDED === 'true', // TODO: default to true or false?
-})
+}))
 /** How often we check for IP changes. */
 export const IP_UPDATE_INTERVAL = 10 * 1000 // 10 secs
 /** Cloud Print remote base URL. */
