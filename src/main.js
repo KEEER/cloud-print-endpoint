@@ -4,7 +4,8 @@ import { listen } from './server'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import log from './log'
-import { isValidCode } from './util'
+import { isValidCode, db, spawnScript, pathFromName } from './util'
+import { COLORED_PRINTER_NAME } from './consts'
 
 let win
 
@@ -32,18 +33,30 @@ function createWindow() {
 
 app.on('ready', createWindow)
 
-ipcMain.on('print', (e, code) => {
+ipcMain.on('print', async (e, code) => {
+  // TODO: replace magic strings
   log(`[DEBUG] receiving print req ${code}`)
   if (!isValidCode(code)) return
-  if (code < 1000) return
+  const fileEntry = await db.findOne({ code })
+  if (!fileEntry) return
   if (Math.random() < 0.5) return e.reply('show-once', './img/error.svg', '未知错误', '请按回车键以继续')
+  // TODO: pay
+  try {
+    // TODO: load options
+    await spawnScript('printer/print', [ COLORED_PRINTER_NAME, '{"page-ranges":"1"}', pathFromName(fileEntry.id) ])
+  } catch (err) {
+    // TODO: handle errors
+    return e.reply('show-once', './img/error.svg', '出现错误', err && ( err.message || err.toString() ))
+  }
+  e.reply('show-info', './img/print.svg', '正在打印中，请稍候', `共 ${fileEntry.pageCount} 页`)
   setTimeout(function () {
     e.reply('show-once', './img/done.svg', '打印完成！', '请按回车键以继续')
   }, 5000)
-  return e.reply('show-info', './img/print.svg', '正在打印中，请稍候', '页面 1 / 1')
-}).on('print-preview', (e, code) => {
+  // TODO: remove print job
+}).on('print-preview', async (e, code) => {
   log(`[DEBUG] receiving print preview ${code}`)
   if (!isValidCode(code)) return
-  if (code < 1000) return e.reply('show-filename', 'No file found', 'Please check your number.')
-  return e.reply('show-filename', `File ${code}.pdf`, '请按回车键以继续')
+  const fileEntry = await db.findOne({ code })
+  if (!fileEntry) return e.reply('show-filename', '取件码不存在', '请检查后重新输入。')
+  return e.reply('show-filename', fileEntry.file, '请按回车键以继续')
 })
