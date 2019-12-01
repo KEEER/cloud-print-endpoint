@@ -1,10 +1,9 @@
 /** @module log */
 
-import { appendFile as appendFileCb } from 'fs'
-import { promisify } from 'util'
+import { promises as fs } from 'fs'
 import stripAnsi from 'strip-ansi'
 
-const appendFile = promisify(appendFileCb)
+const { appendFile } = fs
 
 /**
  * Makes a log.
