@@ -1,6 +1,6 @@
-import { Configuration } from './util'
-
 /** @module consts */
+
+import { PrintConfiguration } from './print-configuration.js'
 
 // use `require` to work in electron
 const { createPublicKey, createPrivateKey } = require('crypto')
@@ -19,10 +19,10 @@ export const JOB_CLEAN_INTERVAL = 60 * 1000 // 1 min
 /** Hong long is a job for since created. */
 export const JOB_TIMEOUT = 24 * 3600 * 1000 // 24 h
 /** Default configuration of jobs. */
-export const DEFAULT_CONFIG = Object.freeze(new Configuration({
+export const DEFAULT_CONFIG = Object.freeze(new PrintConfiguration({
   copies: parseInt(process.env.DEFAULT_COPIES) || 1,
   colored: process.env.DEFAULT_COLORED === 'true',
-  'double-sided': process.env.DEFAULT_DOUBLE_SIDED === 'true', // TODO: default to true or false?
+  doubleSided: process.env.DEFAULT_DOUBLE_SIDED === 'true',
 }))
 /** How often we check for IP changes. */
 export const IP_UPDATE_INTERVAL = 10 * 1000 // 10 secs

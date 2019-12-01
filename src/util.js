@@ -112,10 +112,3 @@ export const spawnScript = (script, args, timeout = 2000) => new Promise((resolv
     }
   })
 })
-
-/** class to represent a print configuration. */
-export class Configuration{
-  copies
-  colored
-  'double-sided'
-}

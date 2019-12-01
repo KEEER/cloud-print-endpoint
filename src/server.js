@@ -10,9 +10,9 @@ import koaBody from 'koa-body'
 import logger from 'koa-logger'
 import KoaRouter from 'koa-router'
 import uuid from 'uuid/v4'
-import { DEFAULT_CONFIG } from './consts'
 import log from './log'
 import { pathFromName, db, getJobToken, spawnScript } from './util'
+import { PrintConfiguration } from './print-configuration'
 
 let printerMessage = '待命'
 let printerStatus = null
@@ -75,7 +75,7 @@ router.post('/job', getJobToken, async ctx => {
     log(`[ERROR] Uploading file ${e.stack}`)
     error = e
   }
-  const info = { file: file.name, id, time: Date.now(), code, config: { ...DEFAULT_CONFIG } }
+  const info = { file: file.name, id, time: Date.now(), code, config: new PrintConfiguration() }
   if(!error) {
     try {
       info.pageCount = await spawnScript('pdf', [ pathFromName(info.id) ])
