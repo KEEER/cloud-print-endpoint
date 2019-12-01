@@ -7,4 +7,7 @@
 
 const printer = require('node-native-printer')
 const printerName = require('./checkPrinterName')
-console.log(JSON.stringify(printer.printerInfo(printerName)))
+console.log(JSON.stringify({
+  status: 0,
+  response: printer.printerInfo(printerName),
+}))
