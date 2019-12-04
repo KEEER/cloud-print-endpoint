@@ -32,7 +32,7 @@ export const REMOTE_BASE = process.env.REMOTE_BASE
 export const PRINTER_ID = parseInt(process.env.PRINTER_ID)
 /** After this seconds after issuing a job token is invalid. */
 export const JOB_TOKEN_TIMEOUT = 60 // 1 min
-/** Printer name for uncolored prints. */
-export const { BW_PRINTER_NAME } = process.env
-/** Printer name for colord prints. */
-export const { COLORED_PRINTER_NAME } = process.env
+/** Printer name and profile for uncolored prints. */
+export const { BW_PRINTER_NAME, BW_PRINTER_PROFILE } = process.env
+/** Printer name and profile for colord prints. */
+export const { COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE } = process.env

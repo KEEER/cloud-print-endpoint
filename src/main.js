@@ -5,7 +5,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import log from './log'
 import { isValidCode, db, spawnScript, pathFromName } from './util'
-import { COLORED_PRINTER_NAME } from './consts'
+import { COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE } from './consts'
 
 let win
 
@@ -43,7 +43,7 @@ ipcMain.on('print', async (e, code) => {
   // TODO: pay
   try {
     // TODO: load options
-    await spawnScript('printer/print', [ COLORED_PRINTER_NAME, '{"page-ranges":"1"}', pathFromName(fileEntry.id) ])
+    await spawnScript('printer/print', [ COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE, '{"page-ranges":"1"}', pathFromName(fileEntry.id) ])
   } catch (err) {
     // TODO: handle errors
     return e.reply('show-once', './img/error.svg', '出现错误', err && ( err.message || err.toString() ))
