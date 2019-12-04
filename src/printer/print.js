@@ -5,6 +5,7 @@
  * - message: only if status !== 0
  * @module print
  * @param {string} printerName full printer name
+ * @param {string} printerProfile name of printer implementation
  * @param {string} options CUPS options in JSON encoding
  * @param {string} filePath absolute file path
  * @returns {string} see above
@@ -12,10 +13,8 @@
  * @example node src/printer/print HP_LaserJet_Professional_M1136_MFP '{"page-ranges":"1,2","n":"4"}' files/9ae5326e-40b1-4c32-96ea-08756b0c0117.pdf
  */
 
-const printer = require('node-native-printer')
-
 const printerName = require('./checkPrinterName')
-const [ /* /usr/bin/node */, /* src/printer/print */, /* printerName */, options, filePath ] = process.argv
+const [ /* /usr/bin/node */, /* src/printer/print */, /* printerName */, printerProfile, options, filePath ] = process.argv
 
 if(!options || !filePath) {
   console.log(JSON.stringify({
@@ -25,12 +24,23 @@ if(!options || !filePath) {
   process.exit(1)
 }
 
+let print
 try {
-  const res = printer.print(filePath, JSON.parse(options), printerName)
-  if (!res) throw 'No result from CUPS'
+  print = require(`./profile/${printerProfile}/print`)
+} catch (e) {
+  console.log(JSON.stringify({
+    status: 1,
+    message: `Invalid printer profile: ${e}`,
+  }))
+  process.exit(1)
+}
+
+try {
+  // TODO: normalize options
+  const res = print(printerName, filePath, JSON.parse(options))
   console.log(JSON.stringify({
     status: 0,
-    message: res,
+    response: res,
   }))
   process.exit(0)
 } catch (e) {
