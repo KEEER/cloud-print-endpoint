@@ -107,16 +107,9 @@ router.post('/get-configs', ctx => {
   // TODO
 })
 
-router.post('/set-config', ctx => {
-  const token = ctx.request.body.token;
+router.post('/set-config', getJobToken, ctx => {
   const id = ctx.request.body.id;
   const config = ctx.request.body.config;
-  if (!token.validate()) {
-    ctx.body = {
-      status: 1
-    }
-    return
-  }
   let error;
   await db.update({ id }, { $set: { config } }).catch(
     e => error = e
@@ -134,7 +127,6 @@ router.post('/set-config', ctx => {
 })
 
 router.post('/delete-job', ctx => {
-
   // TODO
 })
 
