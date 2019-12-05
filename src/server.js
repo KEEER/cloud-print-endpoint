@@ -117,11 +117,20 @@ router.post('/set-config', ctx => {
     }
     return
   }
-  await db.update({info}, { $set: { config }})
+  let error;
+  await db.update({info}, { $set: { config }}).catch(
+    e => error = e
+  )
+  if(error){
+    ctx.body = {
+      status: 1,
+      error
+    }
+    return
+  }
   ctx.body = {
     status: 0
   }
-  // TODO
 })
 
 router.post('/delete-job', ctx => {
