@@ -20,11 +20,11 @@ let printerStatus = null
 const app = new Koa()
 
 app.use(logger(log))
-   .use(koaBody({ multipart: true }))
+  .use(koaBody({ multipart: true }))
 
 const router = new KoaRouter()
 app.use(router.routes())
-   .use(router.allowedMethods())
+  .use(router.allowedMethods())
 
 router.get('/', ctx => {
   // TODO
@@ -56,7 +56,7 @@ router.post('/job', getJobToken, async ctx => {
       error: 'Only one file per code'
     }
   }
-  if(file.type !== 'application/pdf') {
+  if (file.type !== 'application/pdf') {
     return ctx.body = {
       status: 1,
       error: 'Not a PDF file',
@@ -76,9 +76,9 @@ router.post('/job', getJobToken, async ctx => {
     error = e
   }
   const info = { file: file.name, id, time: Date.now(), code, config: { ...DEFAULT_CONFIG } }
-  if(!error) {
+  if (!error) {
     try {
-      info.pageCount = await spawnScript('pdf', [ pathFromName(info.id) ])
+      info.pageCount = await spawnScript('pdf', [pathFromName(info.id)])
     } catch (e) {
       log(`[WARN] pdf parsing ${e && e.stack || JSON.stringify(e)}`)
       error = e
@@ -111,17 +111,17 @@ router.post('/set-config', ctx => {
   const token = ctx.request.body.token;
   const id = ctx.request.body.id;
   const config = ctx.request.body.config;
-  if(!token.validate()){
+  if (!token.validate()) {
     ctx.body = {
       status: 1
     }
     return
   }
   let error;
-  await db.update({info}, { $set: { config }}).catch(
+  await db.update({ info }, { $set: { config } }).catch(
     e => error = e
   )
-  if(error){
+  if (error) {
     ctx.body = {
       status: 1,
       error
@@ -134,6 +134,7 @@ router.post('/set-config', ctx => {
 })
 
 router.post('/delete-job', ctx => {
+
   // TODO
 })
 
@@ -147,7 +148,7 @@ router.get('/status', ctx => ctx.body = {
   },
 })
 
-export function listen (port, host = '0.0.0.0') {
+export function listen(port, host = '0.0.0.0') {
   app.listen(port, host)
   log(`[INFO] Listening on http://${host}:${port}/`)
 }
