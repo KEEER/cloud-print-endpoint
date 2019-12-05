@@ -126,8 +126,22 @@ router.post('/set-config', getJobToken, ctx => {
   }
 })
 
-router.post('/delete-job', ctx => {
-  // TODO
+router.post('/delete-job', getJobToken, ctx => {
+  const id = ctx.request.body.id;
+  let error;
+  await db.remove({id}).catch(
+    e => error = e
+  )
+  if(error){
+    ctx.body = {
+      status: 1,
+      error
+    }
+    return
+  }
+  ctx.body = {
+    status: 0
+  }
 })
 
 router.get('/status', ctx => ctx.body = {
