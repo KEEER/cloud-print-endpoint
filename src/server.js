@@ -118,7 +118,7 @@ router.post('/set-config', ctx => {
     return
   }
   let error;
-  await db.update({ info }, { $set: { config } }).catch(
+  await db.update({ id }, { $set: { config } }).catch(
     e => error = e
   )
   if (error) {
