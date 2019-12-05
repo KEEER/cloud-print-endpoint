@@ -108,6 +108,19 @@ router.post('/get-configs', ctx => {
 })
 
 router.post('/set-config', ctx => {
+  const token = ctx.request.body.token;
+  const id = ctx.request.body.id;
+  const config = ctx.request.body.config;
+  if(!token.validate()){
+    ctx.body = {
+      status: 1
+    }
+    return
+  }
+  await db.update({info}, { $set: { config }})
+  ctx.body = {
+    status: 0
+  }
   // TODO
 })
 
