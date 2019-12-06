@@ -6,7 +6,7 @@ if(!file) {
 try {
   console.log(JSON.stringify({
     status: 0,
-    result: require('hummus').createReader(file).getPagesCount(),
+    response: require('hummus').createReader(file).getPagesCount(),
   }))
 } catch (e) {
   console.log(JSON.stringify({

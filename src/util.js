@@ -105,7 +105,7 @@ export const spawnScript = (script, args, timeout = 2000) => new Promise((resolv
     try {
       data = JSON.parse(data)
       if(data.status !== 0) throw data
-      return resolve(data.result)
+      return resolve(data.response)
     } catch (e) {
       log(`[WARN] script ${script} execution: ${e instanceof Error ? e : JSON.stringify(e)}`)
       reject(e)

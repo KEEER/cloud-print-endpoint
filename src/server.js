@@ -13,9 +13,7 @@ import uuid from 'uuid/v4'
 import log from './log'
 import { pathFromName, db, getJobToken, spawnScript } from './util'
 import { PrintConfiguration } from './print-configuration'
-
-let printerMessage = '待命'
-let printerStatus = null
+import { printerStatus, printerMessage } from './status'
 
 const app = new Koa()
 
@@ -93,7 +91,7 @@ router.post('/get-configs', ctx => {
   // TODO
 })
 
-router.post('/set-config', getJobToken, ctx => {
+router.post('/set-config', getJobToken, async ctx => {
   const id = ctx.request.body.id
   const config = ctx.request.body.config
   try {
@@ -105,7 +103,7 @@ router.post('/set-config', getJobToken, ctx => {
   return ctx.body = { status: 0 }
 })
 
-router.post('/delete-job', getJobToken, ctx => {
+router.post('/delete-job', getJobToken, async ctx => {
   const id = ctx.request.body.id
   try {
     await db.remove({ id })
@@ -113,9 +111,7 @@ router.post('/delete-job', getJobToken, ctx => {
     log(`[WARN] delete job ${e}`)
     return ctx.sendError(e)
   }
-  return ctx.body = {
-    status: 0,
-  }
+  return ctx.body = { status: 0 }
 })
 
 router.get('/status', ctx => ctx.body = {
@@ -123,8 +119,8 @@ router.get('/status', ctx => ctx.body = {
   response: {
     name: process.env.PRINTER_NAME,
     geolocation: process.env.PRINTER_GEOLOCATION || null,
-    status: printerStatus, // TODO
-    message: printerMessage, // TODO
+    status: printerStatus,
+    message: printerMessage,
   },
 })
 

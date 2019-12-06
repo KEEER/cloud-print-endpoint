@@ -34,5 +34,18 @@ export const PRINTER_ID = parseInt(process.env.PRINTER_ID)
 export const JOB_TOKEN_TIMEOUT = 60 // 1 min
 /** Printer name and profile for uncolored prints. */
 export const { BW_PRINTER_NAME, BW_PRINTER_PROFILE } = process.env
-/** Printer name and profile for colord prints. */
+/** Printer name and profile for colored prints. */
 export const { COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE } = process.env
+/** How often we run the printer status script. */
+export const STATUS_UPDATE_INTERVAL = 1 * 1000 // 1 sec
+/** Status messages for status codes. */
+export const MESSAGE_FROM_STATUS = Object.freeze({
+  idle: '待命',
+  'out-of-paper': '缺纸',
+  printing: '正在打印',
+  unknown: '未知',
+  undefined: '未知',
+  // TODO
+})
+/** Join statuses together to get a 'better' status. */
+export const JOIN_STATUS = ({ bw, colored }) => `黑白打印机${MESSAGE_FROM_STATUS[bw]}，彩色打印机${MESSAGE_FROM_STATUS[colored]}`
