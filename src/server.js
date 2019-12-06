@@ -20,11 +20,11 @@ let printerStatus = null
 const app = new Koa()
 
 app.use(logger(log))
-   .use(koaBody({ multipart: true }))
+  .use(koaBody({ multipart: true }))
 
 const router = new KoaRouter()
 app.use(router.routes())
-   .use(router.allowedMethods())
+  .use(router.allowedMethods())
 
 router.get('/', ctx => {
   // TODO
@@ -56,7 +56,7 @@ router.post('/job', getJobToken, async ctx => {
       error: 'Only one file per code'
     }
   }
-  if(file.type !== 'application/pdf') {
+  if (file.type !== 'application/pdf') {
     return ctx.body = {
       status: 1,
       error: 'Not a PDF file',
@@ -76,9 +76,9 @@ router.post('/job', getJobToken, async ctx => {
     error = e
   }
   const info = { file: file.name, id, time: Date.now(), code, config: new PrintConfiguration() }
-  if(!error) {
+  if (!error) {
     try {
-      info.pageCount = await spawnScript('pdf', [ pathFromName(info.id) ])
+      info.pageCount = await spawnScript('pdf', [pathFromName(info.id)])
     } catch (e) {
       log(`[WARN] pdf parsing ${e && e.stack || JSON.stringify(e)}`)
       error = e
@@ -107,12 +107,41 @@ router.post('/get-configs', ctx => {
   // TODO
 })
 
-router.post('/set-config', ctx => {
-  // TODO
+router.post('/set-config', getJobToken, ctx => {
+  const id = ctx.request.body.id;
+  const config = ctx.request.body.config;
+  let error;
+  await db.update({ id }, { $set: { config } }).catch(
+    e => error = e
+  )
+  if (error) {
+    ctx.body = {
+      status: 1,
+      error
+    }
+    return
+  }
+  ctx.body = {
+    status: 0
+  }
 })
 
-router.post('/delete-job', ctx => {
-  // TODO
+router.post('/delete-job', getJobToken, ctx => {
+  const id = ctx.request.body.id;
+  let error;
+  await db.remove({id}).catch(
+    e => error = e
+  )
+  if(error){
+    ctx.body = {
+      status: 1,
+      error
+    }
+    return
+  }
+  ctx.body = {
+    status: 0
+  }
 })
 
 router.get('/status', ctx => ctx.body = {
@@ -125,7 +154,7 @@ router.get('/status', ctx => ctx.body = {
   },
 })
 
-export function listen (port, host = '0.0.0.0') {
+export function listen(port, host = '0.0.0.0') {
   app.listen(port, host)
   log(`[INFO] Listening on http://${host}:${port}/`)
 }
