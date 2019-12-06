@@ -138,7 +138,7 @@ F: src/server.js
 ```
 P: GET /status
 M: Alan Liang <a+keeer@keeer.net>
-S: In Progress
+S: Maintained
 F: src/server.js
 ```
 
