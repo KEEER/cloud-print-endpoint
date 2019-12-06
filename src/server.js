@@ -19,6 +19,17 @@ let printerStatus = null
 
 const app = new Koa()
 
+app.context.sendError = function (message) {
+  if (typeof message === 'undefined') message = null
+  if (message !== null && typeof message !== 'string') message = message.toString()
+  this.body = {
+    status: 1,
+    message,
+    response: null,
+  }
+  return
+}
+
 app.use(logger(log))
   .use(koaBody({ multipart: true }))
 
@@ -43,27 +54,12 @@ router.get('/', ctx => {
 router.post('/job', getJobToken, async ctx => {
   let file = ctx.request.files.file
   const { code } = ctx.state.token
-  if ((await db.find({ code })).length !== 0) {
-    return ctx.body = {
-      status: 1,
-      error: 'Code already using',
-      response: null,
-    }
-  }
-  if (Array.isArray(file)) {
-    return ctx.body = {
-      status: 1,
-      error: 'Only one file per code'
-    }
-  }
-  if (file.type !== 'application/pdf') {
-    return ctx.body = {
-      status: 1,
-      error: 'Not a PDF file',
-      response: null,
-    }
-  }
-  let error = null
+
+  // sanity check
+  if ((await db.find({ code })).length !== 0) return ctx.sendError('Code already using')
+  if (Array.isArray(file)) return ctx.sendError('Only one file per code')
+  if (file.type !== 'application/pdf') return ctx.sendError('Not a PDF file')
+
   const id = uuid() + '.pdf'
   const stream = createWriteStream(pathFromName(id))
   log(`[DEBUG] Uploading ${file.name} to ${id}`)
@@ -73,24 +69,14 @@ router.post('/job', getJobToken, async ctx => {
     })
   } catch (e) {
     log(`[ERROR] Uploading file ${e.stack}`)
-    error = e
+    return ctx.sendError(e)
   }
   const info = { file: file.name, id, time: Date.now(), code, config: new PrintConfiguration() }
-  if (!error) {
-    try {
-      info.pageCount = await spawnScript('pdf', [pathFromName(info.id)])
-    } catch (e) {
-      log(`[WARN] pdf parsing ${e && e.stack || JSON.stringify(e)}`)
-      error = e
-    }
-  }
-  if (error) {
-    ctx.body = {
-      status: 1,
-      error,
-      response: null,
-    }
-    return
+  try {
+    info.pageCount = await spawnScript('pdf', [pathFromName(info.id)])
+  } catch (e) {
+    log(`[WARN] pdf parsing ${e && e.stack || JSON.stringify(e)}`)
+    return ctx.sendError(e)
   }
   await db.insert(info)
   info['page-count'] = info.pageCount
@@ -108,39 +94,27 @@ router.post('/get-configs', ctx => {
 })
 
 router.post('/set-config', getJobToken, ctx => {
-  const id = ctx.request.body.id;
-  const config = ctx.request.body.config;
-  let error;
-  await db.update({ id }, { $set: { config } }).catch(
-    e => error = e
-  )
-  if (error) {
-    ctx.body = {
-      status: 1,
-      error
-    }
-    return
+  const id = ctx.request.body.id
+  const config = ctx.request.body.config
+  try {
+    await db.update({ id }, { $set: { config } })
+  } catch (e) {
+    log(`[WARN] set config ${e}`)
+    return ctx.sendError(e)
   }
-  ctx.body = {
-    status: 0
-  }
+  return ctx.body = { status: 0 }
 })
 
 router.post('/delete-job', getJobToken, ctx => {
-  const id = ctx.request.body.id;
-  let error;
-  await db.remove({id}).catch(
-    e => error = e
-  )
-  if(error){
-    ctx.body = {
-      status: 1,
-      error
-    }
-    return
+  const id = ctx.request.body.id
+  try {
+    await db.remove({ id })
+  } catch (e) {
+    log(`[WARN] delete job ${e}`)
+    return ctx.sendError(e)
   }
-  ctx.body = {
-    status: 0
+  return ctx.body = {
+    status: 0,
   }
 })
 
