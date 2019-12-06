@@ -49,3 +49,5 @@ export const MESSAGE_FROM_STATUS = Object.freeze({
 })
 /** Join statuses together to get a 'better' status. */
 export const JOIN_STATUS = ({ bw, colored }) => `黑白打印机${MESSAGE_FROM_STATUS[bw]}，彩色打印机${MESSAGE_FROM_STATUS[colored]}`
+/** Password for accessing the administration interface. */
+export const { ADMIN_PASSWORD } = process.env

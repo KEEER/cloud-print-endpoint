@@ -6,7 +6,7 @@
 
 // native modules cannot be `import`ed
 const { ipcRenderer } = require('electron')
-import { CODE_DIGITS } from './consts.js'
+import { CODE_DIGITS, ADMIN_PASSWORD } from './consts.js'
 
 const $ = function (name) { return document.querySelector(name) }
 
@@ -19,6 +19,7 @@ const tipEl = $('#tip')
 const infoImageEl = $('#info-image')
 const infoTitleEl = $('#info-title')
 const infoSubtitleEl = $('#info-subtitle')
+const adminPasswordEl = $('#admin-password')
 
 function clearCode () {
   code.length = 0
@@ -100,6 +101,10 @@ function hideInfo () {
   document.addEventListener('keydown', handleCode)
 }
 
+let adminStroke = 0
+let adminStrokeTime = 0
+let isInAdmin = false
+
 function handleCode (e) {
   e.preventDefault()
   console.log('Pressed 0x' + e.keyCode.toString(16))
@@ -122,7 +127,38 @@ function handleCode (e) {
   if (e.keyCode === 0x0d && code.length === CODE_DIGITS) { // enter
     ipcRenderer.send('print', code.join(''))
   }
+  if (e.keyCode === 0xbf || e.keyCode === 0x6f) { // slash
+    if (adminStrokeTime < Date.now() - 4000) {
+      adminStroke = 0
+      adminStrokeTime = Date.now()
+    }
+    adminStroke++
+    if (adminStroke === 4) {
+      adminPasswordEl.style.display = 'block'
+      adminPasswordEl.focus()
+      document.removeEventListener('keydown', handleCode)
+      setTimeout(() => {
+        if (isInAdmin) return
+        document.addEventListener('keydown', handleCode)
+        adminPasswordEl.value = ''
+        adminPasswordEl.style.display = 'none'
+        adminPasswordEl.blur()
+      }, 10 * 1000)
+    }
+  }
 }
+
+adminPasswordEl.addEventListener('keyup', e => {
+  if (e.keyCode === 0x0d) { // enter
+    if (adminPasswordEl.value === ADMIN_PASSWORD) {
+      isInAdmin = true
+      adminPasswordEl.value = ''
+      adminPasswordEl.style.display = 'none'
+      // TODO: admin interface
+      alert('TODO')
+    }
+  }
+})
 
 function handleError (e) {
   e.preventDefault()

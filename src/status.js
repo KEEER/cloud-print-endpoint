@@ -20,7 +20,7 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
       printerStatus.colored = coloredStatus
       printerMessage = JOIN_STATUS(printerStatus)
     } catch (e) {
-      log(`[ERROR] update status ${e.stack || e}`)
+      log(`[ERROR] update status ${e && e.stack || e}`)
     }
     await delay(STATUS_UPDATE_INTERVAL)
   }
