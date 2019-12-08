@@ -27,6 +27,7 @@
     "electron-rebuild": "^1.8.6",
     "esm": "^3.2.25",
     "hummus": "^1.0.107",
+    "ipp": "^2.0.1",
     "koa": "^2.8.1",
     "koa-body": "^4.1.1",
     "koa-logger": "^3.2.1",

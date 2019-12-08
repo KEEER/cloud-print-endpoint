@@ -19,17 +19,20 @@ try {
   process.exit(1)
 }
 
-try {
-  const res = status(printerName)
-  console.log(JSON.stringify({
-    status: 0,
-    response: res,
-  }))
-  process.exit(0)
-} catch (e) {
-  console.log(JSON.stringify({
-    status: 1,
-    message: e.toString(),
-  }))
-  process.exit(1)
-}
+;(async () => {
+  try {
+    const res = await status(printerName)
+    console.log(JSON.stringify({
+      status: 0,
+      response: res,
+    }))
+    process.exit(0)
+  } catch (e) {
+    console.log(JSON.stringify({
+      status: 1,
+      message: e.toString(),
+    }))
+    process.exit(1)
+  }
+})()
+
