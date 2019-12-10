@@ -98,7 +98,6 @@ export async function getJobToken (ctx, next) {
 export const spawnScript = (script, args, timeout = 2000) => new Promise((resolve, reject) => {
   setTimeout(reject, timeout)
   const spawnArgs = [ 'node', [ path.resolve(__dirname, script), ...args ] ]
-  log(`[DEBUG] starting script with args ${spawnArgs[0]} ${spawnArgs[1].join(' ')}`)
   const parser = spawn(...spawnArgs)
   parser.on('error', reject)
   parser.stdout.on('data', data => {
