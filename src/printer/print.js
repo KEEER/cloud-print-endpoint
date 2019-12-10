@@ -46,7 +46,7 @@ try {
 } catch (e) {
   console.log(JSON.stringify({
     status: 1,
-    message: e.toString(),
+    message: e && e.toString(),
   }))
   process.exit(1)
 }
