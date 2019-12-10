@@ -40,14 +40,18 @@ export const { COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE } = process.env
 export const STATUS_UPDATE_INTERVAL = 1 * 1000 // 1 sec
 /** Status messages for status codes. */
 export const MESSAGE_FROM_STATUS = Object.freeze({
+  'cannot-print': '此文件无法打印',
   idle: '待命',
+  mechanical: '机械故障',
   'out-of-paper': '缺纸',
+  'paper-jam': '卡纸',
+  'printer-error': '打印机异常',
   printing: '正在打印',
   unknown: '未知',
   undefined: '未知',
   // TODO
 })
 /** Join statuses together to get a 'better' status. */
-export const JOIN_STATUS = ({ bw, colored }) => `黑白打印机${MESSAGE_FROM_STATUS[bw]}，彩色打印机${MESSAGE_FROM_STATUS[colored]}`
+export const JOIN_STATUS = ({ bw, colored }) => `黑白打印机${MESSAGE_FROM_STATUS[bw.state]}${bw.message ? ':' + bw.message : ''}，彩色打印机${MESSAGE_FROM_STATUS[colored]}${colored.message ? ':' + colored.message : ''}`
 /** Password for accessing the administration interface. */
 export const { ADMIN_PASSWORD } = process.env
