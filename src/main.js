@@ -40,8 +40,8 @@ ipcMain.on('print', async (e, code) => {
   log(`[DEBUG] receiving print req ${code}`)
   if (!isValidCode(code)) return
   const fileEntry = await db.findOne({ code })
-  const config = new PrintConfiguration(fileEntry.config)
   if (!fileEntry) return
+  const config = new PrintConfiguration(fileEntry.config)
   if (Math.random() < 0.5) return e.reply('show-once', './img/error.svg', '未知错误', '请按回车键以继续')
   // TODO: pay
   try {

@@ -109,9 +109,9 @@ function handleCode (e) {
   e.preventDefault()
   console.log('Pressed 0x' + e.keyCode.toString(16))
   if (e.keyCode === 0x74) location.reload() // F5
-  if (e.keyCode >= 0x30 && e.keyCode <= 0x39) { // number
+  if (e.keyCode >= 0x30 && e.keyCode <= 0x39 || e.keyCode >= 0x60 && e.keyCode <= 0x69) { // number
     if (code.length === CODE_DIGITS) return
-    const number = e.keyCode - 0x30
+    const number = e.keyCode - (e.keyCode > 0x50 ? 0x60 : 0x30)
     codeEls[code.length].innerText = number
     code.push(number)
     if (code.length === CODE_DIGITS) {
