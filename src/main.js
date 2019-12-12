@@ -7,7 +7,7 @@ import log from './log'
 import { isValidCode, db, spawnScript, pathFromName } from './util'
 import { COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE, BW_PRINTER_NAME, BW_PRINTER_PROFILE } from './consts'
 import { PrintConfiguration } from './print-configuration'
-import { status } from './status'
+import { status, printerStatus } from './status'
 
 let win
 
@@ -42,7 +42,6 @@ ipcMain.on('print', async (e, code) => {
   const fileEntry = await db.findOne({ code })
   if (!fileEntry) return
   const config = new PrintConfiguration(fileEntry.config)
-  if (Math.random() < 0.5) return e.reply('show-once', './img/error.svg', '未知错误', '请按回车键以继续')
   // TODO: pay
   try {
     const nameAndProfile = config.colored ? [ COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE ] : [ BW_PRINTER_NAME, BW_PRINTER_PROFILE ]
@@ -52,14 +51,15 @@ ipcMain.on('print', async (e, code) => {
       await spawnScript('printer/print', [ ...nameAndProfile, '{"page-ranges":"1"}', pathFromName(fileEntry.id) ])
     } else {
       // TODO: move into separate function
+      e.reply('show-info', './img/print.svg', '正在打印中，请稍候', `共 ${fileEntry.pageCount} 页`)
       await spawnScript('printer/print', [ ...nameAndProfile, '{}', pathFromName(fileEntry.id) ])
-      status.once(`${type}:idle`, () => e.reply('show-once', './img/done.svg', '打印完成！', '请按回车键以继续'))
+      await printerStatus[type].becomes('idle')
+      e.reply('show-once', './img/done.svg', '打印完成！', '请按回车键以继续')
     }
   } catch (err) {
     // TODO: handle errors
-    return e.reply('show-once', './img/error.svg', '出现错误', err && ( err.message || err.toString() ))
+    return e.reply('show-info', './img/error.svg', '出现错误', err && ( err.message || err.toString() ))
   }
-  e.reply('show-info', './img/print.svg', '正在打印中，请稍候', `共 ${fileEntry.pageCount} 页`)
   // TODO: remove print job
 }).on('print-preview', async (e, code) => {
   log(`[DEBUG] receiving print preview ${code}`)

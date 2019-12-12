@@ -7,35 +7,79 @@ import { spawnScript } from './util'
 
 const { BW_PRINTER_NAME, BW_PRINTER_PROFILE, STATUS_UPDATE_INTERVAL, COLORED_PRINTER_PROFILE, COLORED_PRINTER_NAME, JOIN_STATUS } = consts
 
+export const isNormalState = state => state === 'idle' || state === 'printing'
+
 export const printerStatus = {}
-printerStatus.bw = printerStatus.colored = { state: 'unknown', message: null }
-
-export let printerMessage = JOIN_STATUS(printerStatus)
-
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 /**
  * EventEmitter to listen on status change.
  * @event update on every status update
  * @event <status> on status <status> detected
- * @event <type>:update on (bw / colored) status update
- * @event <type>:<status> combination of the above
  */
+printerStatus.bw = printerStatus.colored = new class extends EventEmitter{
+  constructor ({
+    state = 'unknown',
+    message = null,
+  } = {}) {
+    super()
+    this._state = state, this.message = message
+    this._becomesList = []
+  }
+
+  get state () { return this._state }
+  set state (state) {
+    if (this.state === state) return
+    this._state = state
+    this.emit('update')
+    this.emit(state)
+    this._becomesList = this._becomesList.reduce((prev, curr) => 
+      curr.state === state ? (curr.resolve(), prev) : prev.concat([ curr ])
+    , [])
+    if (!isNormalState(state)) {
+      this.emit('error')
+      this._becomesList = this._becomesList.reduce((prev, curr) => 
+        isNormalState(curr.state) ? (curr.reject(this), prev) : prev.concat([ curr ])
+      , [])
+    }
+  }
+
+  toJSON () {
+    return {
+      state: this.state,
+      message: this.message,
+    }
+  }
+
+  /**
+   * Waits for a certain state.
+   * @async
+   * @param {string} state which state to wait
+   * @param {number} timeout max time to wait before rejection
+   */
+  becomes (state, timeout) {
+    return new Promise((resolve, reject) => {
+      if (timeout) setTimeout(reject, timeout, 'Timeout exceeded.')
+      this._becomesList.push({ state, resolve, reject })
+    })
+  }
+
+  equals (that) {
+    return that && this.state === that.state && this.message === that.message
+  }
+}
+
+export let printerMessage = JOIN_STATUS(printerStatus)
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 export const status = new EventEmitter()
 
 const updateStatus = async (type, printerName, printerProfile) => {
   try {
     const newStatus = await spawnScript('printer/status', [ printerName, printerProfile ])
-    if (printerStatus[type].state !== newStatus.state) {
-      printerStatus[type] = newStatus
-      status.emit('update')
-      status.emit(newStatus.state)
-      status.emit(`${type}:update`)
-      status.emit(`${type}:${newStatus.state}`)
-      if (newStatus.state !== 'idle' && newStatus.state !== 'printing') {
-        status.emit('error')
-        status.emit(`${type}:error`)
-      }
+    if (!printerStatus[type].equals(newStatus)) {
+      printerStatus[type].message = newStatus.message
+      printerStatus[type].state = newStatus.state
     }
   } catch (e) {
     log(`[ERROR] update ${type} status ${e && e.stack || e}`)
@@ -51,7 +95,6 @@ const updateStatus = async (type, printerName, printerProfile) => {
   }
 })()
 
-status.on('error', () => {
-  // TODO
-  log(`[ERROR] printer ${JSON.stringify(printerStatus)}`)
-})
+for (let type of [ 'bw', 'colored' ]) {
+  printerStatus[type].on('error', () => log(`[WARN] printer ${type} status ${JSON.stringify(printerStatus[type])}`))
+}
