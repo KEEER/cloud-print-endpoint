@@ -42,7 +42,7 @@ export class JobToken {
    * @param {string} options.sign signature of code and timestamp
    */
   constructor ({ code, timestamp, sign }) {
-    this.code = code, this.timestamp = timestamp, this.sign = sign
+    this.code = code, this.timestamp = Number(timestamp), this.sign = sign
   }
 
   /**
