@@ -7,7 +7,7 @@ import log from './log'
 import { isValidCode, db, spawnScript, pathFromName } from './util'
 import { COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE, BW_PRINTER_NAME, BW_PRINTER_PROFILE } from './consts'
 import { PrintConfiguration } from './print-configuration'
-import { status, printerStatus } from './status'
+import { printerStatus } from './status'
 
 let win
 

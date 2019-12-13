@@ -9,14 +9,12 @@ const { BW_PRINTER_NAME, BW_PRINTER_PROFILE, STATUS_UPDATE_INTERVAL, COLORED_PRI
 
 export const isNormalState = state => state === 'idle' || state === 'printing'
 
-export const printerStatus = {}
-
 /**
  * EventEmitter to listen on status change.
  * @event update on every status update
  * @event <status> on status <status> detected
  */
-printerStatus.bw = printerStatus.colored = new class extends EventEmitter{
+class PrinterStatus extends EventEmitter{
   constructor ({
     state = 'unknown',
     message = null,
@@ -67,6 +65,8 @@ printerStatus.bw = printerStatus.colored = new class extends EventEmitter{
     return that && this.state === that.state && this.message === that.message
   }
 }
+
+export const printerStatus = Object.freeze({ bw: new PrinterStatus(), colored: new PrinterStatus() })
 
 export let printerMessage = JOIN_STATUS(printerStatus)
 
