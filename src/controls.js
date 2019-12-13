@@ -20,6 +20,9 @@ const infoImageEl = $('#info-image')
 const infoTitleEl = $('#info-title')
 const infoSubtitleEl = $('#info-subtitle')
 const adminPasswordEl = $('#admin-password')
+const adminEl = $('#admin')
+const adminResponseEl = $('#admin-response')
+const adminInputEl = $('#admin-input')
 
 function clearCode () {
   code.length = 0
@@ -134,14 +137,14 @@ function handleCode (e) {
     }
     adminStroke++
     if (adminStroke === 4) {
-      adminPasswordEl.style.display = 'block'
+      adminPasswordEl.classList.remove('hidden')
       adminPasswordEl.focus()
       document.removeEventListener('keydown', handleCode)
       setTimeout(() => {
         if (isInAdmin) return
         document.addEventListener('keydown', handleCode)
         adminPasswordEl.value = ''
-        adminPasswordEl.style.display = 'none'
+        adminPasswordEl.classList.add('hidden')
         adminPasswordEl.blur()
       }, 10 * 1000)
     }
@@ -153,12 +156,30 @@ adminPasswordEl.addEventListener('keyup', e => {
     if (adminPasswordEl.value === ADMIN_PASSWORD) {
       isInAdmin = true
       adminPasswordEl.value = ''
-      adminPasswordEl.style.display = 'none'
-      // TODO: admin interface
-      alert('TODO')
+      adminPasswordEl.classList.add('hidden')
+      adminEl.classList.remove('hidden')
+      adminInputEl.focus()
+      ipcRenderer.send('admin', '0')
     }
   }
 })
+
+adminInputEl.addEventListener('keyup', e => {
+  if (e.keyCode === 0x0d) { // enter
+    ipcRenderer.send('admin', adminInputEl.value)
+    adminInputEl.value = ''
+  }
+})
+
+function showAdminInfo (msg) {
+  adminResponseEl.innerText = msg
+}
+
+function exitAdmin () {
+  isInAdmin = false
+  adminEl.classList.add('hidden')
+  document.addEventListener('keydown', handleCode)
+}
 
 function handleError (e) {
   e.preventDefault()
@@ -175,3 +196,5 @@ ipcRenderer.on('show-info', (_e, ...args) => showInfo(...args))
   .on('hide-info', hideInfo)
   .on('show-filename', (_e, ...args) => showFilename(...args))
   .on('hide-filename', hideFilename)
+  .on('admin', (_e, ...args) => showAdminInfo(...args))
+  .on('exit-admin', exitAdmin)

@@ -67,4 +67,34 @@ ipcMain.on('print', async (e, code) => {
   const fileEntry = await db.findOne({ code })
   if (!fileEntry) return e.reply('show-filename', '取件码不存在', '请检查后重新输入。')
   return e.reply('show-filename', fileEntry.file, '请按回车键以继续')
+}).on('admin', async (e, msg) => {
+  log(`[DEBUG] admin message ${msg}`)
+  const args = msg.split(' ')
+  switch (args[0]) {
+    case '1':
+    case 'exit':
+      e.reply('exit-admin')
+      break
+
+    case '2':
+    case '3':
+    case '4':
+      e.reply('admin', 'TODO')
+      break
+
+    case '5':
+    case 'print':
+      if (!isValidCode(args[1])) {
+        e.reply('admin', '无效打印码')
+        break
+      }
+      e.reply('admin', 'TODO')
+      break
+
+    case '0':
+    case 'help':
+    default:
+      e.reply('admin', '1. 退出\n2. 暂停\n3. 恢复\n4. 日志\n5. 重打印 <打印码>\n0. 帮助')
+      break
+  }
 })
