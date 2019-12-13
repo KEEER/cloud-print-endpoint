@@ -185,6 +185,7 @@ function handleError (e) {
   e.preventDefault()
   if (e.keyCode === 0x0d) { // enter
     document.removeEventListener('keydown', handleError)
+    ipcRenderer.send('hide-info')
     hideInfo()
   }
 }

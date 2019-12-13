@@ -87,6 +87,7 @@ const updateStatus = async (type, printerName, printerProfile) => {
 }
 
 ;(async () => {
+  await delay(100)
   while (true) {
     await updateStatus('bw', BW_PRINTER_NAME, BW_PRINTER_PROFILE)
     await updateStatus('colored', COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE)
