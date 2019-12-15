@@ -2,13 +2,15 @@
 
 import { listen } from './server'
 import { app, BrowserWindow, ipcMain } from 'electron'
+import { promises as fs } from 'fs'
 import fetch from 'node-fetch'
 import path from 'path'
-import { REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT, IS_DEVELOPMENT } from './consts'
+import { REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT, IS_DEVELOPMENT, LOGFILE } from './consts'
 import { sign } from './job-token'
 import log from './log'
 import { PrintConfiguration } from './print-configuration'
 import printJob from './printer/print-job'
+import { printerStatus } from './status'
 import { isValidCode, db } from './util'
 
 let win
@@ -22,7 +24,7 @@ function createWindow() {
   })
 
   win.loadFile(path.resolve(__dirname, 'index.html'))
-  
+
   if (!IS_DEVELOPMENT) {
     win.setFullScreen(true)
   } else {
@@ -40,46 +42,49 @@ function createWindow() {
 
 app.on('ready', createWindow)
 
-ipcMain.on('print', async (e, code) => {
+const handlePrintJob = async (e, code, dontPay) => {
   // TODO: replace magic strings
-  log(`[DEBUG] receiving print req ${code}`)
+  log(`[DEBUG] receiving print req ${code}${dontPay ? ', not paying' : ''}`)
   if (!isValidCode(code)) return
   const fileEntry = await db.findOne({ code })
-  if (!fileEntry) return
-  e.reply('show-info', './img/print.svg', '正在支付', '请稍等……')
-  const configObj = new PrintConfiguration(fileEntry.config).toJSON()
-  configObj['page-count'] = fileEntry.pageCount * configObj.copies
-  const configStr = JSON.stringify(configObj)
-  try {
-    const resPromise = fetch(new URL('/_api/print', REMOTE_BASE), {
-      method: 'post',
-      body: new URLSearchParams({
-        code,
-        config: configStr,
-        id: PRINTER_ID,
-        sign: sign(code, configStr, PRINTER_ID)
-      }),
-    }).then(res => res.json())
-    // TODO: move the following lines into a util func
-    const res = await new Promise((resolve, reject) => {
-      resPromise.then(resolve).catch(reject)
-      setTimeout(reject, REMOTE_TIMEOUT, 'Remote connection timeout.')
-    })
-    switch (res.status) {
-      case 0:
-        break
-      
-      case 1: // in debt
-        e.reply('show-once', './img/error.svg', '您有未结清帐务', '请充值后再打印。')
-        return
-      
-      default:
-        log(`[ERROR] unknown pay status ${JSON.stringify(res)}`)
-        break
+  if (!fileEntry) return 'fileNotFound'
+
+  if (!dontPay) {
+    e.reply('show-info', './img/print.svg', '正在支付', '请稍等……')
+    const configObj = new PrintConfiguration(fileEntry.config).toJSON()
+    configObj['page-count'] = fileEntry.pageCount * configObj.copies
+    const configStr = JSON.stringify(configObj)
+    try {
+      const resPromise = fetch(new URL('/_api/print', REMOTE_BASE), {
+        method: 'post',
+        body: new URLSearchParams({
+          code,
+          config: configStr,
+          id: PRINTER_ID,
+          sign: sign(code, configStr, PRINTER_ID)
+        }),
+      }).then(res => res.json())
+      // TODO: move the following lines into a util func
+      const res = await new Promise((resolve, reject) => {
+        resPromise.then(resolve).catch(reject)
+        setTimeout(reject, REMOTE_TIMEOUT, 'Remote connection timeout.')
+      })
+      switch (res.status) {
+        case 0:
+          break
+        
+        case 1: // in debt
+          e.reply('show-once', './img/error.svg', '您有未结清帐务', '请充值后再打印。')
+          return
+        
+        default:
+          log(`[ERROR] unknown pay status ${JSON.stringify(res)}`)
+          break
+      }
+    } catch (err) {
+      log(`[ERROR] pay ${err && err.stack || err}`)
+      return e.reply('show-once', './img/error.svg', '无法连接至服务器', err && err.toString())
     }
-  } catch (err) {
-    log(`[ERROR] pay ${err && err.stack || err}`)
-    return e.reply('show-once', './img/error.svg', '无法连接至服务器', err && err.toString())
   }
   
   try {
@@ -107,15 +112,23 @@ ipcMain.on('print', async (e, code) => {
     return e.reply('show-info', './img/error.svg', '出现错误', err && ( err.message || err.toString() ))
   }
   // TODO: remove print job
-}).on('print-preview', async (e, code) => {
+}
+
+ipcMain.once('ready', e => {
+  for (let type of [ 'bw', 'colored' ]) {
+    printerStatus[type].on('error', s => {
+      e.reply('show-info', './img/error.svg', '出现错误', s.message || s.state)
+    })
+  }
+}).on('print', (e, code) => handlePrintJob(e, code))
+  .on('print-preview', async (e, code) => {
   log(`[DEBUG] receiving print preview ${code}`)
   if (!isValidCode(code)) return
   const fileEntry = await db.findOne({ code })
   if (!fileEntry) return e.reply('show-filename', '取件码不存在', '请检查后重新输入。')
   return e.reply('show-filename', fileEntry.file, '请按回车键以继续')
 }).on('admin', async (e, msg) => {
-  log(`[DEBUG] admin message ${msg}`)
-  const args = msg.split(' ')
+  const args = msg.split('-')
   switch (args[0]) {
     case '1':
     case 'exit':
@@ -123,9 +136,19 @@ ipcMain.on('print', async (e, code) => {
       break
 
     case '2':
+      printerStatus.halted = true
+      e.reply('show-info', './img/error.svg', '暂停服务', '')
+      e.reply('exit-admin')
+      break
+
     case '3':
+      printerStatus.halted = false
+      e.reply('hide-info')
+      e.reply('exit-admin')
+      break
+
     case '4':
-      e.reply('admin', 'TODO')
+      e.reply('admin', (await fs.readFile(LOGFILE)).toString().split('\n').slice(-40, -1).join('\n'))
       break
 
     case '5':
@@ -134,13 +157,21 @@ ipcMain.on('print', async (e, code) => {
         e.reply('admin', '无效打印码')
         break
       }
-      e.reply('admin', 'TODO')
+      e.reply('exit-admin')
+      if (await handlePrintJob(e, args[1], true) === 'fileNotFound') {
+        e.reply('enter-admin', '未知打印码')
+      }
       break
 
+    case '6':
+      e.reply('hide-info')
+      e.reply('exit-admin')
+      break
+    
     case '0':
     case 'help':
     default:
-      e.reply('admin', '1. 退出\n2. 暂停\n3. 恢复\n4. 日志\n5. 重打印 <打印码>\n0. 帮助')
+      e.reply('admin', '1. 退出\n2. 暂停\n3. 恢复\n4. 日志\n5. 重打印-<打印码>\n6. 隐藏消息\n0. 帮助')
       break
   }
 })

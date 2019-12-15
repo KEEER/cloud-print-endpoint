@@ -59,3 +59,7 @@ export const JOIN_STATUS = ({ bw, colored }) => `黑白打印机${MESSAGE_FROM_S
 export const { ADMIN_PASSWORD } = process.env
 /** After how much time would we consider connection timeout. */
 export const REMOTE_TIMEOUT = 5 * 1000 // 5 secs
+/** Log file to write to. */
+export const { LOGFILE } = process.env
+/** Message to be displayed when printer is halted. */
+export const HALTED_MESSAGE = '暂停服务'

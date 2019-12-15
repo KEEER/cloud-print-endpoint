@@ -2,6 +2,7 @@
 
 import { promises as fs } from 'fs'
 import stripAnsi from 'strip-ansi'
+import { LOGFILE } from './consts.js'
 
 const { appendFile } = fs
 
@@ -13,5 +14,5 @@ const { appendFile } = fs
 export default async function log (str, args) {
   if(!args) args = [ str ]
   console.log(...args)
-  await appendFile(process.env.LOGFILE || 'server.log', `${Date.now()} ${new Date().toLocaleString()} ${arguments.length === 2 ? '[HTTP]' : ''}${stripAnsi(str)}\n`)
+  await appendFile(LOGFILE || 'server.log', `${Date.now()} ${new Date().toLocaleString()} ${arguments.length === 2 ? '[HTTP]' : ''}${stripAnsi(str)}\n`)
 }

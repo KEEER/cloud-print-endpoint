@@ -28,13 +28,13 @@ class PrinterStatus extends EventEmitter{
   set state (state) {
     if (this.state === state) return
     this._state = state
-    this.emit('update')
-    this.emit(state)
+    this.emit('update', this)
+    this.emit(state, this)
     this._becomesList = this._becomesList.reduce((prev, curr) => 
       curr.state === state ? (curr.resolve(), prev) : prev.concat([ curr ])
     , [])
     if (!isNormalState(state)) {
-      this.emit('error')
+      this.emit('error', this)
       this._becomesList = this._becomesList.reduce((prev, curr) => 
         isNormalState(curr.state) ? (curr.reject(this), prev) : prev.concat([ curr ])
       , [])
@@ -66,7 +66,13 @@ class PrinterStatus extends EventEmitter{
   }
 }
 
-export const printerStatus = Object.freeze({ bw: new PrinterStatus(), colored: new PrinterStatus() })
+let isHalted = false
+export const printerStatus = Object.freeze({
+  bw: new PrinterStatus(),
+  colored: new PrinterStatus(),
+  get halted () { return isHalted },
+  set halted (s) { isHalted = s },
+})
 
 export let printerMessage = JOIN_STATUS(printerStatus)
 

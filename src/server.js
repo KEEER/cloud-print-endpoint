@@ -11,6 +11,7 @@ import logger from 'koa-logger'
 import KoaRouter from 'koa-router'
 import uuid from 'uuid/v4'
 import log from './log'
+import { HALTED_MESSAGE } from './consts'
 import { pathFromName, db, getJobToken, spawnScript } from './util'
 import { PrintConfiguration } from './print-configuration'
 import { printerStatus, printerMessage } from './status'
@@ -120,7 +121,7 @@ router.get('/status', ctx => ctx.body = {
     name: process.env.PRINTER_NAME,
     geolocation: process.env.PRINTER_GEOLOCATION || null,
     status: printerStatus,
-    message: printerMessage,
+    message: printerStatus.halted ? HALTED_MESSAGE : printerMessage,
   },
 })
 
