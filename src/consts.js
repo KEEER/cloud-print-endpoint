@@ -37,7 +37,7 @@ export const { BW_PRINTER_NAME, BW_PRINTER_PROFILE } = process.env
 /** Printer name and profile for colored prints. */
 export const { COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE } = process.env
 /** How often we run the printer status script. */
-export const STATUS_UPDATE_INTERVAL = 1 * 1000 // 1 sec
+export const STATUS_UPDATE_INTERVAL = 0.5 * 1000 // 0.5 sec
 /** Status messages for status codes. */
 export const MESSAGE_FROM_STATUS = Object.freeze({
   'cannot-print': '此文件无法打印',

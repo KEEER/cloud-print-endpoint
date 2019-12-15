@@ -4,7 +4,8 @@ import { listen } from './server'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import log from './log'
-import { isValidCode, db, printJob } from './util'
+import printJob from './printer/print-job'
+import { isValidCode, db } from './util'
 
 let win
 
@@ -41,21 +42,26 @@ ipcMain.on('print', async (e, code) => {
   // TODO: pay
   try {
     const gen = printJob(fileEntry)
-    let res
-    while (res = gen.next() && !res.done) switch (res.value) {
+    let res = {}
+    while ((res = await gen.next()) && !res.done) switch (res.value) {
       case 'start':
         e.reply('show-info', './img/print.svg', '正在打印中，请稍候', `共 ${fileEntry.pageCount} 页`)
         break
       case 'second-side':
-          e.reply('show-once', './img/done.svg', '正面打印完成！', '请插入纸张，按回车键以继续打印反面')
+        e.reply('show-once', './img/done.svg', '正面打印完成！', '请插入纸张，按回车键以继续打印反面')
         await new Promise(resolve => ipcMain.once('hide-info', resolve))
+        e.reply('show-info', './img/print.svg', '正在打印中，请稍候', `共 ${fileEntry.pageCount} 页`)
         break
       case 'done':
         e.reply('show-once', './img/done.svg', '打印完成！', '请按回车键以继续')
         break
+      default:
+        e.reply('show-info', './img/print.svg', '打印信息', res.value)
+        break
     }
   } catch (err) {
     // TODO: handle errors
+    log(`[ERROR] print ${err}`)
     return e.reply('show-info', './img/error.svg', '出现错误', err && ( err.message || err.toString() ))
   }
   // TODO: remove print job

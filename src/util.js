@@ -8,8 +8,6 @@ import fetch from 'node-fetch'
 import { CODE_DIGITS, IP_UPDATE_INTERVAL, REMOTE_BASE, PRINTER_ID, COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE, BW_PRINTER_NAME, BW_PRINTER_PROFILE } from './consts'
 import { sign, JobToken } from './job-token'
 import log from './log'
-import { printerStatus } from './status'
-import { PrintConfiguration } from './print-configuration'
 
 /** Main database object. */
 export const db = new Datastore({
@@ -108,6 +106,7 @@ export const spawnScript = (script, args, timeout = 2000) => new Promise((resolv
       if(data.status !== 0) throw data
       return resolve(data.response)
     } catch (e) {
+      log(`[WARN] in script ${spawnArgs[0]} ${spawnArgs[1].join(' ')}`)
       log(`[WARN] script ${script} execution: ${e instanceof Error ? e : JSON.stringify(e)}`)
       reject(e)
     }
@@ -115,38 +114,14 @@ export const spawnScript = (script, args, timeout = 2000) => new Promise((resolv
 })
 
 /**
- * Prints a file.
+ * Directly prints a file.
  * @async
- * @generator
- * @param {object} fileEntry file entry to be printed
+ * @param {FileEntry} fileEntry file entry
+ * @param {any} options CUPS options
  */
-export async function* printJob (fileEntry) {
-  const config = new PrintConfiguration(fileEntry.config)
-  const nameAndProfile = config.colored ? [ COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE ] : [ BW_PRINTER_NAME, BW_PRINTER_PROFILE ]
-  const type = config.colored ? 'colored' : 'bw'
-  if (config.doubleSided) {
-    yield 'start'
-    const allPages = [...Array(fileEntry.pageCount).keys()]
-    // TODO: page ranges
-    const pageRanges = [ allPages.filter(n => n % 2 === 0), allPages.filter(n => n % 2 === 1) ].map(r => r.join(', '))
-    await spawnScript('printer/print', [
-      ...nameAndProfile,
-      JSON.stringify({ 'page-ranges': pageRanges[0] }),
-      pathFromName(fileEntry.id)
-    ])
-    await printerStatus[type].becomes('idle')
-    yield 'second-side'
-    await spawnScript('printer/print', [
-      ...nameAndProfile,
-      JSON.stringify({ 'page-ranges': pageRanges[1], 'orientation-requested': 6, outputorder: 'reverse' }),
-      pathFromName(fileEntry.id)
-    ])
-    await printerStatus[type].becomes('idle')
-    yield 'done'
-  } else {
-    yield 'start'
-    await spawnScript('printer/print', [ ...nameAndProfile, '{}', pathFromName(fileEntry.id) ])
-    await printerStatus[type].becomes('idle')
-    yield 'done'
-  }
-}
+export const print = (fileEntry, options = {}) => spawnScript('printer/print', [
+  fileEntry.config.colored ? COLORED_PRINTER_NAME : BW_PRINTER_NAME,
+  fileEntry.config.colored ? COLORED_PRINTER_PROFILE : BW_PRINTER_PROFILE,
+  JSON.stringify(options),
+  pathFromName(fileEntry.id)
+])

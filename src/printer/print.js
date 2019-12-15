@@ -36,7 +36,6 @@ try {
 }
 
 try {
-  // TODO: normalize options
   const res = print(printerName, filePath, JSON.parse(options))
   console.log(JSON.stringify({
     status: 0,
