@@ -6,6 +6,8 @@ import { PrintConfiguration } from './print-configuration.js'
 const { createPublicKey, createPrivateKey } = require('crypto')
 const { readFileSync } = require('fs')
 
+/** If this is a development environment. */
+export const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 /** How many digits is in a job code. */
 export const CODE_DIGITS = 4
 /** The KeyObject of remote public key. */

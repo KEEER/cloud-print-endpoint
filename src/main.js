@@ -4,7 +4,7 @@ import { listen } from './server'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import fetch from 'node-fetch'
 import path from 'path'
-import { REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT } from './consts'
+import { REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT, IS_DEVELOPMENT } from './consts'
 import { sign } from './job-token'
 import log from './log'
 import { PrintConfiguration } from './print-configuration'
@@ -15,7 +15,6 @@ let win
 
 function createWindow() {
   win = new BrowserWindow({
-    // TODO
     autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: true,
@@ -23,9 +22,13 @@ function createWindow() {
   })
 
   win.loadFile(path.resolve(__dirname, 'index.html'))
-  // win.setFullScreen(true)
-  win.webContents.openDevTools()
-  win.maximize()
+  
+  if (!IS_DEVELOPMENT) {
+    win.setFullScreen(true)
+  } else {
+    win.webContents.openDevTools()
+    win.maximize()
+  }
 
   let port = parseInt(process.env.PORT)
   if(!port || port <= 0 || port >= 65536 || Number.isNaN(port)) {
