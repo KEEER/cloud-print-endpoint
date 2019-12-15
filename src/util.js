@@ -41,14 +41,11 @@ const updateIp = async () => {
     try {
       const res = await fetch(new URL('/_api/printer-ip', REMOTE_BASE), {
         method: 'post',
-        body: JSON.stringify({
-          id: PRINTER_ID, // TODO
+        body: new URLSearchParams({
+          id: PRINTER_ID,
           ip: newIp,
           sign: sign(PRINTER_ID, newIp),
         }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
       }).then(res => res.json())
       if(res.status !== 0) throw res
     } catch (e) {
