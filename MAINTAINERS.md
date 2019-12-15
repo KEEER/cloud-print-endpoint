@@ -38,7 +38,7 @@ F: src/index.js
 
 ```
 M: Alan Liang <a+keeer@keeer.net>
-S: In Progress
+S: Maintained
 F: src/controls.js
 F: src/img/*
 F: src/index.html
@@ -66,10 +66,12 @@ F: src/log.js
 
 ```
 M: Alan Liang <a+keeer@keeer.net>
-S: In Progress
+S: Maintained
 T: git git://github.com/KEEER/node-native-printer.git
 T: git git://github.com/KEEER/node-native-printer-dist.git
 F: src/printer/*
+F: src/status.js
+F: src/print-configuration.js
 ```
 
 ## Project Structure
