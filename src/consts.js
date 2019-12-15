@@ -55,3 +55,5 @@ export const MESSAGE_FROM_STATUS = Object.freeze({
 export const JOIN_STATUS = ({ bw, colored }) => `黑白打印机${MESSAGE_FROM_STATUS[bw.state]}${bw.message ? ':' + bw.message : ''}，彩色打印机${MESSAGE_FROM_STATUS[colored.state]}${colored.message ? ':' + colored.message : ''}`
 /** Password for accessing the administration interface. */
 export const { ADMIN_PASSWORD } = process.env
+/** After how much time would we consider connection timeout. */
+export const REMOTE_TIMEOUT = 5 * 1000 // 5 secs

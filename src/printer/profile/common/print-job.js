@@ -5,6 +5,7 @@ import { print } from '../../../util'
 export default async function* (fileEntry) {
   const config = new PrintConfiguration(fileEntry.config)
   const type = config.colored ? 'colored' : 'bw'
+  // TODO: multile copies
   const bwAddon = config.colored ? {} : { 'ColorModel': 'Gray' }
   if (config.doubleSided) {
     yield 'start'

@@ -2,8 +2,12 @@
 
 import { listen } from './server'
 import { app, BrowserWindow, ipcMain } from 'electron'
+import fetch from 'node-fetch'
 import path from 'path'
+import { REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT } from './consts'
+import { sign } from './job-token'
 import log from './log'
+import { PrintConfiguration } from './print-configuration'
 import printJob from './printer/print-job'
 import { isValidCode, db } from './util'
 
@@ -39,7 +43,42 @@ ipcMain.on('print', async (e, code) => {
   if (!isValidCode(code)) return
   const fileEntry = await db.findOne({ code })
   if (!fileEntry) return
-  // TODO: pay
+  e.reply('show-info', './img/print.svg', '正在支付', '请稍等……')
+  const configObj = new PrintConfiguration(fileEntry.config).toJSON()
+  configObj['page-count'] = fileEntry.pageCount * configObj.copies
+  const configStr = JSON.stringify(configObj)
+  try {
+    const resPromise = fetch(new URL('/_api/print', REMOTE_BASE), {
+      method: 'post',
+      body: new URLSearchParams({
+        code,
+        config: configStr,
+        id: PRINTER_ID,
+        sign: sign(code, configStr, PRINTER_ID)
+      }),
+    }).then(res => res.json())
+    // TODO: move the following lines into a util func
+    const res = await new Promise((resolve, reject) => {
+      resPromise.then(resolve).catch(reject)
+      setTimeout(reject, REMOTE_TIMEOUT, 'Remote connection timeout.')
+    })
+    switch (res.status) {
+      case 0:
+        break
+      
+      case 1: // in debt
+        e.reply('show-once', './img/error.svg', '您有未结清帐务', '请充值后再打印。')
+        return
+      
+      default:
+        log(`[ERROR] unknown pay status ${JSON.stringify(res)}`)
+        break
+    }
+  } catch (err) {
+    log(`[ERROR] pay ${err && err.stack || err}`)
+    return e.reply('show-once', './img/error.svg', '无法连接至服务器', err && err.toString())
+  }
+  
   try {
     const gen = printJob(fileEntry)
     let res = {}

@@ -44,7 +44,7 @@ const updateIp = async () => {
         body: JSON.stringify({
           id: PRINTER_ID, // TODO
           ip: newIp,
-          sign: sign(PRINTER_ID.toString(), newIp),
+          sign: sign(PRINTER_ID, newIp),
         }),
         headers: {
           'Content-Type': 'application/json',
