@@ -5,7 +5,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { promises as fs } from 'fs'
 import fetch from 'node-fetch'
 import path from 'path'
-import { REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT, IS_DEVELOPMENT, LOGFILE } from './consts'
+import { REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT, IS_DEVELOPMENT, LOGFILE, STRINGS } from './consts'
 import { sign } from './job-token'
 import log from './log'
 import { PrintConfiguration } from './print-configuration'
@@ -43,14 +43,13 @@ function createWindow() {
 app.on('ready', createWindow)
 
 const handlePrintJob = async (e, code, dontPay) => {
-  // TODO: replace magic strings
   log(`[DEBUG] receiving print req ${code}${dontPay ? ', not paying' : ''}`)
   if (!isValidCode(code)) return
   const fileEntry = await db.findOne({ code })
   if (!fileEntry) return 'fileNotFound'
 
   if (!dontPay) {
-    e.reply('show-info', './img/print.svg', '正在支付', '请稍等……')
+    e.reply('show-info', './img/print.svg', STRINGS.paying, STRINGS.payingWait)
     const configObj = new PrintConfiguration(fileEntry.config).toJSON()
     configObj['page-count'] = fileEntry.pageCount * configObj.copies
     const configStr = JSON.stringify(configObj)
@@ -74,7 +73,7 @@ const handlePrintJob = async (e, code, dontPay) => {
           break
         
         case 1: // in debt
-          e.reply('show-once', './img/error.svg', '您有未结清帐务', '请充值后再打印。')
+          e.reply('show-once', './img/error.svg', STRINGS.debtToPay, STRINGS.debtRecharge)
           return
         
         default:
@@ -83,35 +82,52 @@ const handlePrintJob = async (e, code, dontPay) => {
       }
     } catch (err) {
       log(`[ERROR] pay ${err && err.stack || err}`)
-      return e.reply('show-once', './img/error.svg', '无法连接至服务器', err && err.toString())
+      return e.reply('show-once', './img/error.svg', STRINGS.cannotConnect, err && err.toString())
     }
   }
   
   try {
     const gen = printJob(fileEntry)
     let res = {}
+    const showPrintingMessage = () => {
+      const showMulticopies = fileEntry.config.copies > 1 && Array.isArray(res.value)
+      const message = ( showMulticopies ? STRINGS.printingHintMulticopies : STRINGS.printingHint )
+        .replace(/:pageCount:/g, fileEntry.pageCount)
+        .replace(/:copies:/g, fileEntry.config.copies)
+      e.reply('show-info', './img/print.svg', STRINGS.printing, message)
+    }
     while ((res = await gen.next()) && !res.done) switch (Array.isArray(res.value) ? res.value[0] : res.value) {
       case 'start':
-        e.reply('show-info', './img/print.svg', '正在打印中，请稍候', `共 ${fileEntry.pageCount} 页${fileEntry.config.copies > 1 && Array.isArray(res.value) ? `，正在打印 1/${fileEntry.config.copies} 份` : ''}`)
+        showPrintingMessage()
         break
       case 'second-side':
-        e.reply('show-once', './img/done.svg', '正面打印完成！', '请插入纸张，按回车键以继续打印反面')
+        e.reply('show-once', './img/done.svg', STRINGS.firstSideOk, STRINGS.firstSidePrintSecond)
         await new Promise(resolve => ipcMain.once('hide-info', resolve))
-        e.reply('show-info', './img/print.svg', '正在打印中，请稍候', `共 ${fileEntry.pageCount} 页`)
+        showPrintingMessage()
         break
       case 'done':
-        e.reply('show-once', './img/done.svg', '打印完成！', `请按回车键以继续${fileEntry.config.copies > 1 ? Array.isArray(res.value) ? res.value[1] !== fileEntry.config.copies - 1 ? `，已经打印 ${res.value[1] + 1}/${fileEntry.config.copies} 份` : '，全部完成' : '' : ''}`)
+        let message
+        if (fileEntry.config.copies > 1 && Array.isArray(res.value)) {
+          if (res.value[1] !== fileEntry.config.copies - 1) {
+            message = STRINGS.printingOkHintMulticopies
+              .replace(/:copies:/g, fileEntry.config.copies)
+              .replace(/:currentCopies:/g, res.value[1] + 1)
+          } else message = STRINGS.printingOkHintAllDone
+        } else message = STRINGS.printingOkHint
+        e.reply('show-once', './img/done.svg', STRINGS.printingOk, message)
         await new Promise(resolve => ipcMain.once('hide-info', resolve))
-        if (Array.isArray(res.value) && res.value[1] !== fileEntry.config.copies - 1) e.reply('show-info', './img/print.svg', '正在打印中，请稍候', `共 ${fileEntry.pageCount} 页${fileEntry.config.copies > 1 && Array.isArray(res.value) ? `，正在打印 ${res.value[1] + 2}/${fileEntry.config.copies} 份` : ''}`)
+        if (Array.isArray(res.value) && res.value[1] !== fileEntry.config.copies - 1) {
+          showPrintingMessage()
+        }
         break
       default:
-        e.reply('show-info', './img/print.svg', '打印信息', res.value)
+        e.reply('show-info', './img/print.svg', STRINGS.printingInfo, res.value)
         break
     }
   } catch (err) {
     // TODO: handle errors
     log(`[ERROR] print ${err}`)
-    return e.reply('show-info', './img/error.svg', '出现错误', err && ( err.message || err.toString() ))
+    return e.reply('show-info', './img/error.svg', STRINGS.printingError, err && ( err.message || err.toString() ))
   }
   // TODO: remove print job
 }
@@ -119,7 +135,7 @@ const handlePrintJob = async (e, code, dontPay) => {
 ipcMain.once('ready', e => {
   for (let type of [ 'bw', 'colored' ]) {
     printerStatus[type].on('error', s => {
-      e.reply('show-info', './img/error.svg', '出现错误', s.message || s.state)
+      e.reply('show-info', './img/error.svg', STRINGS.printingError, s.message || s.state)
     })
   }
 }).on('print', (e, code) => handlePrintJob(e, code))
@@ -127,8 +143,8 @@ ipcMain.once('ready', e => {
   log(`[DEBUG] receiving print preview ${code}`)
   if (!isValidCode(code)) return
   const fileEntry = await db.findOne({ code })
-  if (!fileEntry) return e.reply('show-filename', '取件码不存在', '请检查后重新输入。')
-  return e.reply('show-filename', fileEntry.file, '请按回车键以继续')
+  if (!fileEntry) return e.reply('show-filename', STRINGS.noSuchCode, STRINGS.noSuchCodeCheck)
+  return e.reply('show-filename', fileEntry.file, STRINGS.pressEnter)
 }).on('admin', async (e, msg) => {
   const args = msg.split('-')
   switch (args[0]) {
@@ -139,7 +155,7 @@ ipcMain.once('ready', e => {
 
     case '2':
       printerStatus.halted = true
-      e.reply('show-info', './img/error.svg', '暂停服务', '')
+      e.reply('show-info', './img/error.svg', STRINGS.serviceHalt, '')
       e.reply('exit-admin')
       break
 

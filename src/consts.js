@@ -51,7 +51,6 @@ export const MESSAGE_FROM_STATUS = Object.freeze({
   printing: '正在打印',
   unknown: '未知',
   undefined: '未知',
-  // TODO
 })
 /** Join statuses together to get a 'better' status. */
 export const JOIN_STATUS = ({ bw, colored }) => `黑白打印机${MESSAGE_FROM_STATUS[bw.state]}${bw.message ? ':' + bw.message : ''}，彩色打印机${MESSAGE_FROM_STATUS[colored.state]}${colored.message ? ':' + colored.message : ''}`
@@ -61,5 +60,29 @@ export const { ADMIN_PASSWORD } = process.env
 export const REMOTE_TIMEOUT = 5 * 1000 // 5 secs
 /** Log file to write to. */
 export const { LOGFILE } = process.env
+/** Strings to be displayed. */
+export const STRINGS = Object.freeze({
+  cannotConnect: '无法连接至服务器',
+  debtRecharge: '请充值后再打印。',
+  debtToPay: '您有未结清帐务',
+  firstSideOk: '正面打印完成！',
+  firstSidePrintSecond: '请插入纸张，按回车键以继续打印反面',
+  haltedMessage: '暂停服务',
+  noSuchCode: '取件码不存在',
+  noSuchCodeCheck: '请检查后重新输入。',
+  paying: '正在支付',
+  payingWait: '请稍等……',
+  pressEnter: '请按回车键以继续',
+  printing: '正在打印中，请稍候',
+  printingError: '出现错误',
+  printingHint: '共 :pageCount: 页',
+  printingHintMulticopies: '共 :pageCount: 页，正在打印 1/:copies: 份',
+  printingInfo: '打印信息',
+  printingOk: '打印完成！',
+  printingOkHint: '请按回车键以继续',
+  printingOkHintAllDone: '请按回车键以继续，全部完成！',
+  printingOkHintMulticopies: '请按回车键以继续，已经打印 :currentCopies:/:copies: 份',
+  serviceHalt: '暂停服务',
+})
 /** Message to be displayed when printer is halted. */
-export const HALTED_MESSAGE = '暂停服务'
+export const HALTED_MESSAGE = STRINGS.haltedMessage
