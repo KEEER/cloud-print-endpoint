@@ -90,9 +90,9 @@ const handlePrintJob = async (e, code, dontPay) => {
   try {
     const gen = printJob(fileEntry)
     let res = {}
-    while ((res = await gen.next()) && !res.done) switch (res.value) {
+    while ((res = await gen.next()) && !res.done) switch (Array.isArray(res.value) ? res.value[0] : res.value) {
       case 'start':
-        e.reply('show-info', './img/print.svg', '正在打印中，请稍候', `共 ${fileEntry.pageCount} 页`)
+        e.reply('show-info', './img/print.svg', '正在打印中，请稍候', `共 ${fileEntry.pageCount} 页${fileEntry.config.copies > 1 && Array.isArray(res.value) ? `，正在打印 1/${fileEntry.config.copies} 份` : ''}`)
         break
       case 'second-side':
         e.reply('show-once', './img/done.svg', '正面打印完成！', '请插入纸张，按回车键以继续打印反面')
@@ -100,7 +100,9 @@ const handlePrintJob = async (e, code, dontPay) => {
         e.reply('show-info', './img/print.svg', '正在打印中，请稍候', `共 ${fileEntry.pageCount} 页`)
         break
       case 'done':
-        e.reply('show-once', './img/done.svg', '打印完成！', '请按回车键以继续')
+        e.reply('show-once', './img/done.svg', '打印完成！', `请按回车键以继续${fileEntry.config.copies > 1 ? Array.isArray(res.value) ? res.value[1] !== fileEntry.config.copies - 1 ? `，已经打印 ${res.value[1] + 1}/${fileEntry.config.copies} 份` : '，全部完成' : '' : ''}`)
+        await new Promise(resolve => ipcMain.once('hide-info', resolve))
+        if (Array.isArray(res.value) && res.value[1] !== fileEntry.config.copies - 1) e.reply('show-info', './img/print.svg', '正在打印中，请稍候', `共 ${fileEntry.pageCount} 页${fileEntry.config.copies > 1 && Array.isArray(res.value) ? `，正在打印 ${res.value[1] + 2}/${fileEntry.config.copies} 份` : ''}`)
         break
       default:
         e.reply('show-info', './img/print.svg', '打印信息', res.value)
