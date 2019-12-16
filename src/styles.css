@@ -40,6 +40,10 @@ body {
   margin: 32px;
   height: 67px;
   font-weight: 200;
+  display: block;
+  max-width: 64%;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 #tip {
