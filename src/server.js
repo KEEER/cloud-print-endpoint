@@ -10,11 +10,12 @@ import koaBody from 'koa-body'
 import logger from 'koa-logger'
 import KoaRouter from 'koa-router'
 import uuid from 'uuid/v4'
+import { HALTED_MESSAGE, REMOTE_BASE, REMOTE_TIMEOUT } from './consts'
+import { sign } from './job-token'
 import log from './log'
-import { HALTED_MESSAGE } from './consts'
-import { pathFromName, db, getJobToken, spawnScript } from './util'
 import { PrintConfiguration } from './print-configuration'
 import { printerStatus, printerMessage } from './status'
+import { pathFromName, db, getJobToken, spawnScript, useTimeout } from './util'
 
 const app = new Koa()
 
@@ -106,10 +107,19 @@ router.post('/set-config', getJobToken, async ctx => {
 
 router.post('/delete-job', getJobToken, async ctx => {
   const id = ctx.request.body.id
+  const code = ctx.state.token.code
+  const url = new URL('/_api/delete-job-token', REMOTE_BASE)
+  url.search = new URLSearchParams({
+    code,
+    sign: sign(code)
+  })
   try {
+    const res = await useTimeout(fetch(url).then(res => res.json()), REMOTE_TIMEOUT)
+    if (res.status !== 0) throw res
+    log(`[DEBUG] about to remove job ${code}, file ${id}`)
     await db.remove({ id })
   } catch (e) {
-    log(`[WARN] delete job ${e}`)
+    log(`[WARN] delete job ${e instanceof Error ? e.stack : JSON.stringify(e)}`)
     return ctx.sendError(e)
   }
   return ctx.body = { status: 0 }
