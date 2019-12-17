@@ -3,9 +3,9 @@
 import EventEmitter from 'events'
 import * as consts from './consts'
 import log from './log'
-import { spawnScript } from './util'
+import { spawnScript, useTimeout } from './util'
 
-const { BW_PRINTER_NAME, BW_PRINTER_PROFILE, STATUS_UPDATE_INTERVAL, COLORED_PRINTER_PROFILE, COLORED_PRINTER_NAME, JOIN_STATUS } = consts
+const { BW_PRINTER_NAME, BW_PRINTER_PROFILE, STATUS_UPDATE_INTERVAL, COLORED_PRINTER_PROFILE, COLORED_PRINTER_NAME, JOIN_STATUS, PRINT_TIMEOUT } = consts
 
 export const isNormalState = state => state === 'idle' || state === 'printing'
 
@@ -54,11 +54,10 @@ class PrinterStatus extends EventEmitter{
    * @param {string} state which state to wait
    * @param {number} timeout max time to wait before rejection
    */
-  becomes (state, timeout) {
-    return new Promise((resolve, reject) => {
-      if (timeout) setTimeout(reject, timeout, 'Timeout exceeded.')
+  becomes (state, timeout = PRINT_TIMEOUT) {
+    return useTimeout(new Promise((resolve, reject) => {
       this._becomesList.push({ state, resolve, reject })
-    })
+    }), timeout)
   }
 
   equals (that) {

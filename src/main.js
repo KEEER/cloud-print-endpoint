@@ -11,7 +11,7 @@ import log from './log'
 import { PrintConfiguration } from './print-configuration'
 import printJob from './printer/print-job'
 import { printerStatus } from './status'
-import { isValidCode, db } from './util'
+import { isValidCode, db, useTimeout } from './util'
 
 let win
 
@@ -54,7 +54,7 @@ const handlePrintJob = async (e, code, dontPay) => {
     configObj['page-count'] = fileEntry.pageCount * configObj.copies
     const configStr = JSON.stringify(configObj)
     try {
-      const resPromise = fetch(new URL('/_api/print', REMOTE_BASE), {
+      const res = await useTimeout(fetch(new URL('/_api/print', REMOTE_BASE), {
         method: 'post',
         body: new URLSearchParams({
           code,
@@ -62,12 +62,7 @@ const handlePrintJob = async (e, code, dontPay) => {
           id: PRINTER_ID,
           sign: sign(code, configStr, PRINTER_ID)
         }),
-      }).then(res => res.json())
-      // TODO: move the following lines into a util func
-      const res = await new Promise((resolve, reject) => {
-        resPromise.then(resolve).catch(reject)
-        setTimeout(reject, REMOTE_TIMEOUT, 'Remote connection timeout.')
-      })
+      }).then(res => res.json()), REMOTE_TIMEOUT, 'Remote connection timeout.')
       switch (res.status) {
         case 0:
           break
@@ -129,7 +124,6 @@ const handlePrintJob = async (e, code, dontPay) => {
     log(`[ERROR] print ${err}`)
     return e.reply('show-info', './img/error.svg', STRINGS.printingError, err && ( err.message || err.toString() ))
   }
-  // TODO: remove print job
 }
 
 ipcMain.once('ready', e => {

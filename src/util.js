@@ -122,3 +122,14 @@ export const print = (fileEntry, options = {}) => spawnScript('printer/print', [
   JSON.stringify(options),
   pathFromName(fileEntry.id)
 ])
+
+/**
+ * Rejects a promise after timeout.
+ * @param {Promise} promise The promise to be limited
+ * @param {number} ms how many milliseconds to wait
+ * @param {string} reason rejection message
+ */
+export const useTimeout = (promise, ms, reason = 'Timeout exceeded.') => new Promise((resolve, reject) => {
+  setTimeout(reject, ms, reason)
+  promise.then(resolve).catch(reject)
+})
