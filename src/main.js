@@ -120,7 +120,6 @@ const handlePrintJob = async (e, code, dontPay) => {
         break
     }
   } catch (err) {
-    // TODO: handle errors
     log(`[ERROR] print ${err}`)
     return e.reply('show-info', './img/error.svg', STRINGS.printingError, err && ( err.message || err.toString() ))
   }

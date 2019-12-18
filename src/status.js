@@ -3,9 +3,10 @@
 import EventEmitter from 'events'
 import * as consts from './consts'
 import log from './log'
+import { sign } from './job-token'
 import { spawnScript, useTimeout } from './util'
 
-const { BW_PRINTER_NAME, BW_PRINTER_PROFILE, STATUS_UPDATE_INTERVAL, COLORED_PRINTER_PROFILE, COLORED_PRINTER_NAME, JOIN_STATUS, PRINT_TIMEOUT } = consts
+const { BW_PRINTER_NAME, BW_PRINTER_PROFILE, STATUS_UPDATE_INTERVAL, COLORED_PRINTER_PROFILE, COLORED_PRINTER_NAME, JOIN_STATUS, PRINT_TIMEOUT, REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT } = consts
 
 export const isNormalState = state => state === 'idle' || state === 'printing'
 
@@ -102,5 +103,22 @@ const updateStatus = async (type, printerName, printerProfile) => {
 })()
 
 for (let type of [ 'bw', 'colored' ]) {
-  printerStatus[type].on('error', () => log(`[WARN] printer ${type} status ${JSON.stringify(printerStatus[type])}`))
+  printerStatus[type].on('error', async () => {
+    log(`[WARN] printer ${type} status ${JSON.stringify(printerStatus[type])}`)
+    const status = JSON.stringify(printerStatus)
+    try {
+      const res = await useTimeout(fetch(new URL('/_api/error-report', REMOTE_BASE), {
+        method: 'post',
+        body: {
+          status,
+          id: PRINTER_ID,
+          sign: sign(status, id),
+        },
+        headers: { 'Content-Type': 'application/json' },
+      }), REMOTE_TIMEOUT, 'Remote connection timeout')
+      if (!res || res.status !== 0) throw res
+    } catch (e) {
+      log(`[ERROR] reporting printer status to remote: ${e instanceof Error ? e.stack : JSON.stringify(e)}`)
+    }
+  })
 }
