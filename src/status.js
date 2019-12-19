@@ -1,6 +1,7 @@
 /** @module status */
 
 import EventEmitter from 'events'
+import fetch from 'node-fetch'
 import * as consts from './consts'
 import log from './log'
 import { sign } from './job-token'
@@ -109,11 +110,11 @@ for (let type of [ 'bw', 'colored' ]) {
     try {
       const res = await useTimeout(fetch(new URL('/_api/error-report', REMOTE_BASE), {
         method: 'post',
-        body: {
+        body: new URLSearchParams({
           status,
           id: PRINTER_ID,
           sign: sign(status, id),
-        },
+        }),
         headers: { 'Content-Type': 'application/json' },
       }), REMOTE_TIMEOUT, 'Remote connection timeout')
       if (!res || res.status !== 0) throw res
