@@ -94,10 +94,10 @@ router.post('/get-configs', ctx => {
 })
 
 router.post('/set-config', getJobToken, async ctx => {
-  const id = ctx.request.body.id
   const config = ctx.request.body.config
+  const code = ctx.state.token.code
   try {
-    await db.update({ id }, { $set: { config } })
+    await db.update({ code }, { $set: { config } })
   } catch (e) {
     log(`[WARN] set config ${e}`)
     return ctx.sendError(e)
@@ -106,7 +106,6 @@ router.post('/set-config', getJobToken, async ctx => {
 })
 
 router.post('/delete-job', getJobToken, async ctx => {
-  const id = ctx.request.body.id
   const code = ctx.state.token.code
   const url = new URL('/_api/delete-job-token', REMOTE_BASE)
   url.search = new URLSearchParams({
@@ -116,8 +115,8 @@ router.post('/delete-job', getJobToken, async ctx => {
   try {
     const res = await useTimeout(fetch(url).then(res => res.json()), REMOTE_TIMEOUT)
     if (res.status !== 0) throw res
-    log(`[DEBUG] about to remove job ${code}, file ${id}`)
-    await db.remove({ id })
+    log(`[DEBUG] about to remove job ${code}`)
+    await db.remove({ code })
   } catch (e) {
     log(`[WARN] delete job ${e instanceof Error ? e.stack : JSON.stringify(e)}`)
     return ctx.sendError(e)
