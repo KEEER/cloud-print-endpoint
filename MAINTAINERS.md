@@ -113,7 +113,7 @@ F: src/server.js
 ```
 P: POST /get-configs
 M: Andy Lee <andylizf@outlook.com>
-S: Todo
+S: Maintained
 F: src/server.js
 ```
 
@@ -122,7 +122,7 @@ F: src/server.js
 ```
 P: POST /set-config
 M: Andy Lee <andylizf@outlook.com>
-S: Todo
+S: Maintained
 F: src/server.js
 ```
 
@@ -131,7 +131,7 @@ F: src/server.js
 ```
 P: POST /delete-job
 M: Andy Lee <andylizf@outlook.com>
-S: Todo
+S: Maintained
 F: src/server.js
 ```
 
