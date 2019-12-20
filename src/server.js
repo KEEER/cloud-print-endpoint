@@ -10,8 +10,8 @@ import koaBody from 'koa-body'
 import logger from 'koa-logger'
 import KoaRouter from 'koa-router'
 import uuid from 'uuid/v4'
-import { HALTED_MESSAGE, REMOTE_BASE, REMOTE_TIMEOUT } from './consts'
-import { sign } from './job-token'
+import { HALTED_MESSAGE, REMOTE_BASE, REMOTE_TIMEOUT, JOB_TOKEN_TIMEOUT } from './consts'
+import { sign, verify } from './job-token'
 import log from './log'
 import { PrintConfiguration } from './print-configuration'
 import { printerStatus, printerMessage } from './status'
@@ -89,8 +89,21 @@ router.post('/job', getJobToken, async ctx => {
   }
 })
 
-router.post('/get-configs', ctx => {
-  // TODO
+router.post('/get-configs', async ctx => {
+  const { codes, timestamp, sign } = ctx.request.body
+  if (!Array.isArray(codes) || !timestamp || !sign) return ctx.sendError('Invalid form.')
+  if (timestamp + JOB_TOKEN_TIMEOUT < Date.now() / 1000 || !verify(sign, codes.join(','), timestamp)) {
+    return ctx.sendError('Invalid signature.')
+  }
+  const fileEntries = await Promise.all(codes.map(code => db.findOne({ code })))
+  for (let fileEntry of fileEntries) {
+    if (!fileEntry) return ctx.sendError('No such code.')
+    fileEntry.config = new PrintConfiguration(fileEntry.config)
+    fileEntry['page-count'] = fileEntry.pageCount
+    delete fileEntry.pageCount
+    delete fileEntry._id
+  }
+  return ctx.body = { status: 0, response: fileEntries }
 })
 
 router.post('/set-config', getJobToken, async ctx => {

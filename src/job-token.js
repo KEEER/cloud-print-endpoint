@@ -54,7 +54,7 @@ export class JobToken {
   async validate () {
     const { timestamp } = this
     assert(isValidCode(this.code), 'invalid code')
-    assert(timestamp + JOB_TOKEN_TIMEOUT > Date.now() / 1000 )
+    assert(timestamp + JOB_TOKEN_TIMEOUT > Date.now() / 1000)
     assert(verify(this.sign, this.code, timestamp), 'invalid signature')
     return true
   }
