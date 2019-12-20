@@ -113,9 +113,8 @@ for (let type of [ 'bw', 'colored' ]) {
         body: new URLSearchParams({
           status,
           id: PRINTER_ID,
-          sign: sign(status, id),
+          sign: sign(status, PRINTER_ID),
         }),
-        headers: { 'Content-Type': 'application/json' },
       }), REMOTE_TIMEOUT, 'Remote connection timeout')
       if (!res || res.status !== 0) throw res
     } catch (e) {
