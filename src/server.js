@@ -33,6 +33,15 @@ app.context.sendError = function (message) {
 app.use(logger(log))
   .use(koaBody({ multipart: true }))
 
+app.use((ctx, next) => {
+  ctx.response.append('X-Powered-By', 'KEEER Cloud Print')
+  // CORS
+  ctx.response.append('Access-Control-Allow-Origin', '*')
+  ctx.response.append('Access-Control-Allow-Headers', 'Content-Type')
+  ctx.response.append('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  return next()
+})
+
 const router = new KoaRouter()
 app.use(router.routes())
   .use(router.allowedMethods())
