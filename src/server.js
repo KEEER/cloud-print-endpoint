@@ -116,7 +116,7 @@ router.post('/get-configs', async ctx => {
 })
 
 router.post('/set-config', getJobToken, async ctx => {
-  const config = ctx.request.body.config
+  const config = new PrintConfiguration(ctx.request.body.config)
   const code = ctx.state.token.code
   try {
     await db.update({ code }, { $set: { config } })
