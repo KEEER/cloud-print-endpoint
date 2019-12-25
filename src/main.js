@@ -49,6 +49,7 @@ const handlePrintJob = async (e, code, dontPay) => {
   if (!fileEntry) return 'fileNotFound'
 
   if (!dontPay) {
+    if (fileEntry.printed) return 'fileNotFound'
     e.reply('show-info', './img/print.svg', STRINGS.paying, STRINGS.payingWait)
     const configObj = new PrintConfiguration(fileEntry.config).toJSON()
     configObj['page-count'] = fileEntry.pageCount * configObj.copies
@@ -123,6 +124,7 @@ const handlePrintJob = async (e, code, dontPay) => {
     log(`[ERROR] print ${err}`)
     return e.reply('show-info', './img/error.svg', STRINGS.printingError, err && ( err.message || err.toString() ))
   }
+  await db.update({ code }, { $set: { printed: true } })
 }
 
 ipcMain.once('ready', e => {
@@ -136,7 +138,7 @@ ipcMain.once('ready', e => {
   log(`[DEBUG] receiving print preview ${code}`)
   if (!isValidCode(code)) return
   const fileEntry = await db.findOne({ code })
-  if (!fileEntry) return e.reply('show-filename', STRINGS.noSuchCode, STRINGS.noSuchCodeCheck)
+  if (!fileEntry || fileEntry.printed) return e.reply('show-filename', STRINGS.noSuchCode, STRINGS.noSuchCodeCheck)
   return e.reply('show-filename', fileEntry.file, STRINGS.pressEnter)
 }).on('admin', async (e, msg) => {
   const args = msg.split('-')

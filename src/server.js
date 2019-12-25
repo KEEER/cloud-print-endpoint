@@ -9,6 +9,7 @@ import Koa from 'koa'
 import koaBody from 'koa-body'
 import logger from 'koa-logger'
 import KoaRouter from 'koa-router'
+import fetch from 'node-fetch'
 import uuid from 'uuid/v4'
 import { HALTED_MESSAGE, REMOTE_BASE, REMOTE_TIMEOUT, JOB_TOKEN_TIMEOUT } from './consts'
 import { sign, verify } from './job-token'
@@ -132,7 +133,7 @@ router.post('/delete-job', getJobToken, async ctx => {
   const url = new URL('/_api/delete-job-token', REMOTE_BASE)
   url.search = new URLSearchParams({
     code,
-    sign: sign(code)
+    sign: sign(code),
   })
   try {
     const res = await useTimeout(fetch(url).then(res => res.json()), REMOTE_TIMEOUT)
