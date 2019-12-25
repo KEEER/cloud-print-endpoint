@@ -106,13 +106,13 @@ router.post('/get-configs', async ctx => {
   }
   const fileEntries = await Promise.all(codes.map(code => db.findOne({ code })))
   for (let fileEntry of fileEntries) {
-    if (!fileEntry) return ctx.sendError('No such code.')
+    if (!fileEntry) break
     fileEntry.config = new PrintConfiguration(fileEntry.config)
     fileEntry['page-count'] = fileEntry.pageCount
     delete fileEntry.pageCount
     delete fileEntry._id
   }
-  return ctx.body = { status: 0, response: fileEntries }
+  return ctx.body = { status: 0, response: fileEntries.filter(file => !!file) }
 })
 
 router.post('/set-config', getJobToken, async ctx => {

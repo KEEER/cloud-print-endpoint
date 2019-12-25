@@ -69,9 +69,11 @@ export const pathFromName = name => path.join(process.env.FILEDIR || '', name)
  * @param {function} next Koa next function
  */
 export async function getJobToken (ctx, next) {
-  const token = new JobToken(JSON.parse(ctx.request.body.token))
   try {
+    const tokenObj = ctx.request.body.token
+    const token = new JobToken(typeof tokenObj === 'string' ? JSON.parse(tokenObj) : tokenObj)
     await token.validate()
+    ctx.state.token = token
   } catch (e) {
     log(`[WARN] bad token: ${e}`)
     ctx.body = {
@@ -81,7 +83,6 @@ export async function getJobToken (ctx, next) {
     }
     return
   }
-  ctx.state.token = token
   return await next()
 }
 
