@@ -6,7 +6,7 @@
 
 // native modules cannot be `import`ed
 const { ipcRenderer } = require('electron')
-import { CODE_DIGITS, ADMIN_PASSWORD } from './consts.js'
+import { CODE_DIGITS, ADMIN_PASSWORD, CODE_TIMEOUT } from './consts.js'
 
 const $ = function (name) { return document.querySelector(name) }
 
@@ -24,12 +24,18 @@ const adminEl = $('#admin')
 const adminResponseEl = $('#admin-response')
 const adminInputEl = $('#admin-input')
 
+let codeTimeoutId = null
+
 function clearCode () {
   code.length = 0
   for (let i = 0; i < codeEls.length; i++) {
     codeEls[i].innerText = ''
   }
   hideFilename()
+  if (codeTimeoutId !== null) {
+    clearTimeout(codeTimeoutId)
+    codeTimeoutId = null
+  }
 }
 
 /**
@@ -117,6 +123,8 @@ function handleCode (e) {
     const number = e.keyCode - (e.keyCode > 0x50 ? 0x60 : 0x30)
     codeEls[code.length].innerText = number
     code.push(number)
+    if (codeTimeoutId !== null) clearTimeout(codeTimeoutId)
+    codeTimeoutId = setTimeout(clearCode, CODE_TIMEOUT)
     if (code.length === CODE_DIGITS) {
       ipcRenderer.send('print-preview', code.join(''))
     }

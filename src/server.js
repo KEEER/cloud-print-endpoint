@@ -72,7 +72,7 @@ router.post('/job', getJobToken, async ctx => {
 
   const id = uuid() + '.pdf'
   const stream = createWriteStream(pathFromName(id))
-  log(`[DEBUG] Uploading ${file.name} to ${id}`)
+  log(`[DEBUG] Uploading ${file.name} on ${code} to ${id}`)
   try {
     await new Promise((resolve, reject) => {
       createReadStream(file.path).pipe(stream).on('close', resolve).on('error', reject)
