@@ -87,6 +87,6 @@ export const STRINGS = Object.freeze({
 /** Message to be displayed when printer is halted. */
 export const HALTED_MESSAGE = STRINGS.haltedMessage
 /** Timeout of printing. */
-export const PRINT_TIMEOUT = 2 * 60 * 1000 // 2 minutes
+export const PRINT_TIMEOUT = 15 * 60 * 1000 // 15 minutes
 /** Timeout of code input. */
 export const CODE_TIMEOUT = 15 * 1000 // 15 secs
