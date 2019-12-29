@@ -83,42 +83,42 @@ const handlePrintJob = async (e, code, dontPay) => {
   }
   
   try {
-    const gen = printJob(fileEntry)
-    let res = {}
-    const showPrintingMessage = () => {
-      const showMulticopies = fileEntry.config.copies > 1 && Array.isArray(res.value)
+    const showPrintingMessage = res => {
+      const showMulticopies = fileEntry.config.copies > 1 && Array.isArray(res)
       const message = ( showMulticopies ? STRINGS.printingHintMulticopies : STRINGS.printingHint )
         .replace(/:pageCount:/g, fileEntry.pageCount)
         .replace(/:copies:/g, fileEntry.config.copies)
       e.reply('show-info', './img/print.svg', STRINGS.printing, message)
     }
-    while ((res = await gen.next()) && !res.done) switch (Array.isArray(res.value) ? res.value[0] : res.value) {
-      case 'start':
-        showPrintingMessage()
-        break
-      case 'second-side':
-        e.reply('show-once', './img/done.svg', STRINGS.firstSideOk, STRINGS.firstSidePrintSecond)
-        await new Promise(resolve => ipcMain.once('hide-info', resolve))
-        showPrintingMessage()
-        break
-      case 'done':
-        let message
-        if (fileEntry.config.copies > 1 && Array.isArray(res.value)) {
-          if (res.value[1] !== fileEntry.config.copies - 1) {
-            message = STRINGS.printingOkHintMulticopies
-              .replace(/:copies:/g, fileEntry.config.copies)
-              .replace(/:currentCopies:/g, res.value[1] + 1)
-          } else message = STRINGS.printingOkHintAllDone
-        } else message = STRINGS.printingOkHint
-        e.reply('show-once', './img/done.svg', STRINGS.printingOk, message)
-        await new Promise(resolve => ipcMain.once('hide-info', resolve))
-        if (Array.isArray(res.value) && res.value[1] !== fileEntry.config.copies - 1) {
-          showPrintingMessage()
-        }
-        break
-      default:
-        e.reply('show-info', './img/print.svg', STRINGS.printingInfo, res.value)
-        break
+    for await (let res of printJob(fileEntry)) {
+      switch (Array.isArray(res) ? res[0] : res) {
+        case 'start':
+          showPrintingMessage(res)
+          break
+        case 'second-side':
+          e.reply('show-once', './img/done.svg', STRINGS.firstSideOk, STRINGS.firstSidePrintSecond)
+          await new Promise(resolve => ipcMain.once('hide-info', resolve))
+          showPrintingMessage(res)
+          break
+        case 'done':
+          let message
+          if (fileEntry.config.copies > 1 && Array.isArray(res)) {
+            if (res[1] !== fileEntry.config.copies - 1) {
+              message = STRINGS.printingOkHintMulticopies
+                .replace(/:copies:/g, fileEntry.config.copies)
+                .replace(/:currentCopies:/g, res[1] + 1)
+            } else message = STRINGS.printingOkHintAllDone
+          } else message = STRINGS.printingOkHint
+          e.reply('show-once', './img/done.svg', STRINGS.printingOk, message)
+          await new Promise(resolve => ipcMain.once('hide-info', resolve))
+          if (Array.isArray(res) && res[1] !== fileEntry.config.copies - 1) {
+            showPrintingMessage(res)
+          }
+          break
+        default:
+          e.reply('show-info', './img/print.svg', STRINGS.printingInfo, res)
+          break
+      }
     }
   } catch (err) {
     log(`[ERROR] print ${err}`)
