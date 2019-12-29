@@ -161,7 +161,9 @@ ipcMain.once('ready', e => {
       break
 
     case '4':
-      e.reply('admin', (await fs.readFile(LOGFILE)).toString().split('\n').slice(-40, -1).join('\n'))
+      let logs = (await fs.readFile(LOGFILE)).toString().split('\n')
+      if (args[1] !== '1') logs = logs.filter(log => log.indexOf('[HTTP]') < 0)
+      e.reply('admin', logs.slice(-40, -1).join('\n'))
       break
 
     case '5':
@@ -180,11 +182,18 @@ ipcMain.once('ready', e => {
       e.reply('hide-info')
       e.reply('exit-admin')
       break
+
+    case '7':
+      e.reply('admin', (await db.find({})).map(job => {
+        const config = new PrintConfiguration(job.config)
+        return ` (${job.code}) ${job.file} (${job.pageCount}) x ${config.copies} @ colored: ${config.colored}, double-sided: ${config.doubleSided}${job.printed ? ', printed' : ''} uploaded @ ${new Date(job.time).toLocaleString()}`
+      }).join('\n'))
+      break
     
     case '0':
     case 'help':
     default:
-      e.reply('admin', '1. 退出\n2. 暂停\n3. 恢复\n4. 日志\n5. 重打印-<打印码>\n6. 隐藏消息\n0. 帮助')
+      e.reply('admin', '1. 退出\n2. 暂停\n3. 恢复\n4. 精简日志\n4-1. 全日志\n5. 重打印-<打印码>\n6. 隐藏消息\n7. 打印码情况\n0. 帮助')
       break
   }
 })
