@@ -6,6 +6,7 @@ body {
   display: flex;
   flex-direction: column;
   user-select: none;
+  font-family: 'URW Gothic L', sans-serif;
 }
 
 .hidden {
@@ -27,7 +28,7 @@ body {
   font-weight: 300;
   text-align: center;
   margin: 12px;
-  color: black;
+  color: #002d4d;
 }
 
 .num::before, .num::after {
@@ -38,12 +39,14 @@ body {
 #filename {
   font-size: 64px;
   margin: 32px;
-  height: 80px;
+  margin-bottom: 0;
+  height: 112px;
   font-weight: 200;
   display: block;
   max-width: 64%;
   text-overflow: ellipsis;
   overflow: hidden;
+  white-space: nowrap;
 }
 
 #tip {

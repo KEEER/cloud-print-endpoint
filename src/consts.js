@@ -90,5 +90,5 @@ export const HALTED_MESSAGE = STRINGS.haltedMessage
 export const PRINT_TIMEOUT = 15 * 60 * 1000 // 15 minutes
 /** Timeout of code input. */
 export const CODE_TIMEOUT = 15 * 1000 // 15 secs
-
+/** Default headers to be sent on `fetch()`. */
 export const DEFAULT_HEADERS = Object.freeze({ 'User-Agent': 'KEEER Cloud Print/0.1 node-fetch/1.0' })
