@@ -71,9 +71,14 @@ const handlePrintJob = async (e, code, dontPay) => {
         case 1: // in debt
           e.reply('show-once', './img/error.svg', STRINGS.debtToPay, STRINGS.debtRecharge)
           return
-        
+
+        case 3: // code not exist
+          log(`[ERROR] pay code not exist ${normalizeError(res)}`)
+          e.reply('show-once', './img/error.svg', STRINGS.noSuchCode, STRINGS.noSuchCodeCheck)
+          return
+
         default:
-          log(`[ERROR] unknown pay status ${JSON.stringify(res)}`)
+          log(`[ERROR] unknown pay status ${normalizeError(res)}`)
           break
       }
     } catch (err) {
