@@ -7,7 +7,7 @@ import log from './log'
 import { sign } from './job-token'
 import { spawnScript, useTimeout, normalizeError } from './util'
 
-const { BW_PRINTER_NAME, BW_PRINTER_PROFILE, STATUS_UPDATE_INTERVAL, COLORED_PRINTER_PROFILE, COLORED_PRINTER_NAME, JOIN_STATUS, PRINT_TIMEOUT, REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT } = consts
+const { BW_PRINTER_NAME, BW_PRINTER_PROFILE, STATUS_UPDATE_INTERVAL, COLORED_PRINTER_PROFILE, COLORED_PRINTER_NAME, JOIN_STATUS, PRINT_TIMEOUT, REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT, DEFAULT_HEADERS } = consts
 
 export const isNormalState = state => state === 'idle' || state === 'printing'
 
@@ -115,6 +115,7 @@ for (let type of [ 'bw', 'colored' ]) {
           id: PRINTER_ID,
           sign: sign(status, PRINTER_ID),
         }),
+        headers: DEFAULT_HEADERS,
       }), REMOTE_TIMEOUT, 'Remote connection timeout')
       if (!res || res.status !== 0) throw res
     } catch (e) {

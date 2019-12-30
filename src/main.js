@@ -5,7 +5,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { promises as fs } from 'fs'
 import fetch from 'node-fetch'
 import path from 'path'
-import { REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT, IS_DEVELOPMENT, LOGFILE, STRINGS } from './consts'
+import { REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT, IS_DEVELOPMENT, LOGFILE, STRINGS, DEFAULT_HEADERS } from './consts'
 import { sign } from './job-token'
 import log from './log'
 import { PrintConfiguration } from './print-configuration'
@@ -63,6 +63,7 @@ const handlePrintJob = async (e, code, dontPay) => {
           id: PRINTER_ID,
           sign: sign(code, configStr, PRINTER_ID)
         }),
+        headers: DEFAULT_HEADERS,
       }).then(res => res.json()), REMOTE_TIMEOUT, 'Remote connection timeout.')
       switch (res.status) {
         case 0:

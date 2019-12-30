@@ -11,7 +11,7 @@ import logger from 'koa-logger'
 import KoaRouter from 'koa-router'
 import fetch from 'node-fetch'
 import uuid from 'uuid/v4'
-import { HALTED_MESSAGE, REMOTE_BASE, REMOTE_TIMEOUT, JOB_TOKEN_TIMEOUT } from './consts'
+import { HALTED_MESSAGE, REMOTE_BASE, REMOTE_TIMEOUT, JOB_TOKEN_TIMEOUT, DEFAULT_HEADERS } from './consts'
 import { sign, verify } from './job-token'
 import log from './log'
 import { PrintConfiguration } from './print-configuration'
@@ -136,7 +136,7 @@ router.post('/delete-job', getJobToken, async ctx => {
     sign: sign(code),
   })
   try {
-    const res = await useTimeout(fetch(url).then(res => res.json()), REMOTE_TIMEOUT)
+    const res = await useTimeout(fetch(url, { headers: DEFAULT_HEADERS }).then(res => res.json()), REMOTE_TIMEOUT)
     if (res.status !== 0) throw res
     log(`[DEBUG] about to remove job ${code}`)
     await db.remove({ code })

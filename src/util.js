@@ -6,7 +6,7 @@ import { networkInterfaces } from 'os'
 import path from 'path'
 import Datastore from 'nedb-promise'
 import fetch from 'node-fetch'
-import { CODE_DIGITS, IP_UPDATE_INTERVAL, REMOTE_BASE, PRINTER_ID, COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE, BW_PRINTER_NAME, BW_PRINTER_PROFILE } from './consts'
+import { CODE_DIGITS, IP_UPDATE_INTERVAL, REMOTE_BASE, PRINTER_ID, COLORED_PRINTER_NAME, COLORED_PRINTER_PROFILE, BW_PRINTER_NAME, BW_PRINTER_PROFILE, DEFAULT_HEADERS } from './consts'
 import { sign, JobToken } from './job-token'
 import log from './log'
 
@@ -47,6 +47,7 @@ const updateIp = async () => {
           ip: newIp,
           sign: sign(PRINTER_ID, newIp),
         }),
+        headers: DEFAULT_HEADERS,
       }).then(res => res.json())
       if(res.status !== 0) throw res
     } catch (e) {
