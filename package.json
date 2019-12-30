@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/KEEER/cp-endpoint#readme",
   "dependencies": {
+    "circular-json": "^0.5.9",
     "dotenv": "^8.1.0",
     "electron": "^7.0.0",
     "electron-rebuild": "^1.8.6",

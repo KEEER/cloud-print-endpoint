@@ -3,6 +3,7 @@
 import { PrintConfiguration } from '../print-configuration'
 import { COLORED_PRINTER_PROFILE, BW_PRINTER_PROFILE } from '../consts'
 import log from '../log'
+import { normalizeError } from '../util'
 
 /**
  * Prints a file.
@@ -17,6 +18,6 @@ export default function printJob (fileEntry) {
     const fn = require(`./profile/${profile}/print-job`)
     return fn(fileEntry)
    } catch (e) {
-     log(`[ERROR] initialize print job: ${e}`)
+     log(`[ERROR] initialize print job: ${normalizeError(e)}`)
    }
 }

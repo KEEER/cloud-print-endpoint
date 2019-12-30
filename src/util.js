@@ -1,5 +1,6 @@
 /** @module util */
 
+import CJSON from 'circular-json'
 import { spawn } from 'child_process'
 import { networkInterfaces } from 'os'
 import path from 'path'
@@ -49,7 +50,7 @@ const updateIp = async () => {
       }).then(res => res.json())
       if(res.status !== 0) throw res
     } catch (e) {
-      log(`[ERROR] updating ip: ${e}`)
+      log(`[ERROR] updating ip: ${normalizeError(e)}`)
     }
   }
 }
@@ -75,7 +76,7 @@ export async function getJobToken (ctx, next) {
     await token.validate()
     ctx.state.token = token
   } catch (e) {
-    log(`[WARN] bad token: ${e}`)
+    log(`[WARN] bad token: ${normalizeError(e)}`)
     ctx.body = {
       status: 1,
       error: 'Invalid token',
@@ -105,7 +106,7 @@ export const spawnScript = (script, args, timeout = 2000) => new Promise((resolv
       return resolve(data.response)
     } catch (e) {
       log(`[WARN] in script ${spawnArgs[0]} ${spawnArgs[1].join(' ')}`)
-      log(`[WARN] script ${script} execution: ${e instanceof Error ? e : JSON.stringify(e)}`)
+      log(`[WARN] script ${script} execution: ${normalizeError(e)}`)
       reject(e)
     }
   })
@@ -134,3 +135,13 @@ export const useTimeout = (promise, ms, reason = 'Timeout exceeded.') => new Pro
   setTimeout(reject, ms, reason)
   promise.then(resolve).catch(reject)
 })
+
+/**
+ * Normalizes an error to be logged.
+ * @param {any} e Error captured
+ */
+export const normalizeError = e => {
+  if (e instanceof Error) return e.stack
+  if (typeof e === 'string') return e
+  return CJSON.stringify(e)
+}

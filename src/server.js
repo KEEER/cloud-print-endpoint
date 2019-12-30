@@ -16,7 +16,7 @@ import { sign, verify } from './job-token'
 import log from './log'
 import { PrintConfiguration } from './print-configuration'
 import { printerStatus, printerMessage } from './status'
-import { pathFromName, db, getJobToken, spawnScript, useTimeout } from './util'
+import { pathFromName, db, getJobToken, spawnScript, useTimeout, normalizeError } from './util'
 
 const app = new Koa()
 
@@ -78,14 +78,14 @@ router.post('/job', getJobToken, async ctx => {
       createReadStream(file.path).pipe(stream).on('close', resolve).on('error', reject)
     })
   } catch (e) {
-    log(`[ERROR] Uploading file ${e.stack}`)
+    log(`[ERROR] Uploading file ${normalizeError(e)}`)
     return ctx.sendError(e)
   }
   const info = { file: file.name, id, time: Date.now(), code, config: new PrintConfiguration() }
   try {
     info.pageCount = await spawnScript('pdf', [pathFromName(info.id)])
   } catch (e) {
-    log(`[WARN] pdf parsing ${e && e.stack || JSON.stringify(e)}`)
+    log(`[WARN] pdf parsing ${normalizeError(e)}`)
     return ctx.sendError(e)
   }
   await db.insert(info)
@@ -122,7 +122,7 @@ router.post('/set-config', getJobToken, async ctx => {
   try {
     await db.update({ code }, { $set: { config } })
   } catch (e) {
-    log(`[WARN] set config ${e}`)
+    log(`[WARN] set config ${normalizeError(e)}`)
     return ctx.sendError(e)
   }
   return ctx.body = { status: 0 }
@@ -141,7 +141,7 @@ router.post('/delete-job', getJobToken, async ctx => {
     log(`[DEBUG] about to remove job ${code}`)
     await db.remove({ code })
   } catch (e) {
-    log(`[WARN] delete job ${e instanceof Error ? e.stack : JSON.stringify(e)}`)
+    log(`[WARN] delete job ${normalizeError}`)
     return ctx.sendError(e)
   }
   return ctx.body = { status: 0 }

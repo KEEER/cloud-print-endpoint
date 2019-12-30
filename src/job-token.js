@@ -5,7 +5,7 @@ import { createVerify, createSign } from 'crypto'
 import { promises as fs } from 'fs'
 import { REMOTE_KEY, SIGN_HASH_METHOD, ENDPOINT_KEY, JOB_CLEAN_INTERVAL, JOB_TIMEOUT, JOB_TOKEN_TIMEOUT } from './consts'
 import log from './log'
-import { isValidCode, db, pathFromName } from './util'
+import { isValidCode, db, pathFromName, normalizeError } from './util'
 const { unlink } = fs
 
 /**
@@ -70,7 +70,7 @@ const cleanJob = async () => {
     try {
       await unlink(pathFromName(file.id))
     } catch (e) {
-      console.log(`[WARN] removing file ${file.id}: ${e}`)
+      console.log(`[WARN] removing file ${file.id}: ${normalizeError(e)}`)
     }
   }
   const count = await db.remove({ time })

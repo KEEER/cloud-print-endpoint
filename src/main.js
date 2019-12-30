@@ -11,7 +11,7 @@ import log from './log'
 import { PrintConfiguration } from './print-configuration'
 import printJob from './printer/print-job'
 import { printerStatus } from './status'
-import { isValidCode, db, useTimeout } from './util'
+import { isValidCode, db, useTimeout, normalizeError } from './util'
 
 let win
 
@@ -77,7 +77,7 @@ const handlePrintJob = async (e, code, dontPay) => {
           break
       }
     } catch (err) {
-      log(`[ERROR] pay ${err && err.stack || err}`)
+      log(`[ERROR] pay ${normalizeError(err)}`)
       return e.reply('show-once', './img/error.svg', STRINGS.cannotConnect, err && err.toString())
     }
   }
@@ -121,7 +121,7 @@ const handlePrintJob = async (e, code, dontPay) => {
       }
     }
   } catch (err) {
-    log(`[ERROR] print ${err}`)
+    log(`[ERROR] print ${normalizeError(err)}`)
     return e.reply('show-info', './img/error.svg', STRINGS.printingError, err && ( err.message || err.toString() ))
   }
   await db.update({ code }, { $set: { printed: true } })
