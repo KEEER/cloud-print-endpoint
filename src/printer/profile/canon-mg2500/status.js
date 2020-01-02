@@ -27,7 +27,7 @@ module.exports = async name => {
   const jobs = await promisify(printer.execute).call(printer, 'Get-Jobs', msg)
   const attributes = await promisify(printer.execute).call(printer, 'Get-Printer-Attributes', null)
 
-  const hasJobPending = jobs['job-attributes-tag'].some(job => ['completed', 'canceled'].indexOf(job['job-state']) < 0)
+  const hasJobPending = jobs['job-attributes-tag'].some(job => ['completed', 'canceled', 'processing-stopped'].indexOf(job['job-state']) < 0)
 
   const message = attributes['printer-attributes-tag']['printer-state-message'] || ''
   const errorCode = (message.match(/[\d|B]{4}/) || [ null ])[0]
