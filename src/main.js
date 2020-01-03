@@ -94,6 +94,7 @@ const handlePrintJob = async (e, code, dontPay) => {
       const message = ( showMulticopies ? STRINGS.printingHintMulticopies : STRINGS.printingHint )
         .replace(/:pageCount:/g, fileEntry.pageCount)
         .replace(/:copies:/g, fileEntry.config.copies)
+        .replace(/:currentCopies:/g, res[1] + 1 || 1)
       e.reply('show-info', './img/print.svg', STRINGS.printing, message)
     }
     for await (let res of printJob(fileEntry)) {
@@ -118,6 +119,7 @@ const handlePrintJob = async (e, code, dontPay) => {
           e.reply('show-once', './img/done.svg', STRINGS.printingOk, message)
           await new Promise(resolve => ipcMain.once('hide-info', resolve))
           if (Array.isArray(res) && res[1] !== fileEntry.config.copies - 1) {
+            res[1]++
             showPrintingMessage(res)
           }
           break

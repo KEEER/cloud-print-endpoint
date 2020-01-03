@@ -76,7 +76,7 @@ export const STRINGS = Object.freeze({
   printing: '正在打印中，请稍候',
   printingError: '出现错误',
   printingHint: '共 :pageCount: 页',
-  printingHintMulticopies: '共 :pageCount: 页，正在打印 1/:copies: 份',
+  printingHintMulticopies: '共 :pageCount: 页，正在打印 :currentCopies:/:copies: 份',
   printingInfo: '打印信息',
   printingOk: '打印完成！',
   printingOkHint: '请按回车键以继续',
