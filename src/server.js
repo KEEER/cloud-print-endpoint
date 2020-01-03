@@ -107,7 +107,7 @@ router.post('/get-configs', async ctx => {
   }
   const fileEntries = await Promise.all(codes.map(code => db.findOne({ code })))
   for (let fileEntry of fileEntries) {
-    if (!fileEntry) break
+    if (!fileEntry) continue
     fileEntry.config = new PrintConfiguration(fileEntry.config)
     fileEntry['page-count'] = fileEntry.pageCount
     delete fileEntry.pageCount
