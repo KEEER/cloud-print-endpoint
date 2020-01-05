@@ -97,7 +97,7 @@ const handlePrintJob = async (e, code, dontPay) => {
         .replace(/:currentCopies:/g, res[1] + 1 || 1)
       e.reply('show-info', './img/print.svg', STRINGS.printing, message)
     }
-    log(`[DEBUG] about to start printing job ${fileEntry.code}: '${fileEntry.file}' (${fileEntry.pageCount}) * ${fileEntry.config.copies}, ${fileEntry.config.colored ? 'colored' : 'bw'}${fileEntry.config['double-sided'] ? ', ds' : ''}`)
+    log(`[DEBUG] about to start printing job ${fileEntry.code}: '${fileEntry.file}' (${fileEntry.pageCount}) * ${fileEntry.config.copies}, ${fileEntry.config.colored ? 'colored' : 'bw'}${fileEntry.config['double-sided'] || fileEntry.config.doubleSided ? ', ds' : ''}`)
     for await (let res of printJob(fileEntry)) {
       switch (Array.isArray(res) ? res[0] : res) {
         case 'start':
