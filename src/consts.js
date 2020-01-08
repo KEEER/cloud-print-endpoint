@@ -83,6 +83,8 @@ export const STRINGS = Object.freeze({
   printingOkHintAllDone: '请按回车键以继续，全部完成！',
   printingOkHintMulticopies: '请按回车键以继续，已经打印 :currentCopies:/:copies: 份',
   serviceHalt: '暂停服务',
+  usingDebt: '正在产生未结清帐务',
+  usingDebtContinue: '您需要在下一次打印之前充值，请按回车键以继续打印',
 })
 /** Message to be displayed when printer is halted. */
 export const HALTED_MESSAGE = STRINGS.haltedMessage

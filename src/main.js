@@ -73,6 +73,11 @@ const handlePrintJob = async (e, code, dontPay) => {
           e.reply('show-once', './img/error.svg', STRINGS.debtToPay, STRINGS.debtRecharge)
           return
 
+        case 2: // using debt
+          e.reply('show-once', './img/error.svg', STRINGS.usingDebt, STRINGS.usingDebtContinue)
+          await new Promise(resolve => ipcMain.once('hide-info', resolve))
+          break
+
         case 3: // code not exist
           log(`[ERROR] pay code not exist ${normalizeError(res)}`)
           e.reply('show-once', './img/error.svg', STRINGS.noSuchCode, STRINGS.noSuchCodeCheck)
