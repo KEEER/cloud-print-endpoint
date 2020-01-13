@@ -141,7 +141,7 @@ router.post('/delete-job', getJobToken, async ctx => {
     log(`[DEBUG] about to remove job ${code}`)
     await db.remove({ code })
   } catch (e) {
-    log(`[WARN] delete job ${normalizeError}`)
+    log(`[WARN] delete job ${normalizeError(e)}`)
     return ctx.sendError(e)
   }
   return ctx.body = { status: 0 }
