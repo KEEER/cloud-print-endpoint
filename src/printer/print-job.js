@@ -17,7 +17,7 @@ export default function printJob (fileEntry) {
   try {
     const fn = require(`./profile/${profile}/print-job`)
     return fn(fileEntry)
-   } catch (e) {
-     log(`[ERROR] initialize print job: ${normalizeError(e)}`)
-   }
+  } catch (e) {
+    log(`[ERROR] initialize print job: ${normalizeError(e)}`)
+  }
 }
