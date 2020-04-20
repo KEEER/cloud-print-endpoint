@@ -2,6 +2,8 @@ import { PrintConfiguration } from '../../../print-configuration'
 import { printerStatus } from '../../../status'
 import { print } from '../../../util'
 
+const scale = { 'scale-to-fit': true }
+
 export default async function* (fileEntry) {
   const config = new PrintConfiguration(fileEntry.config)
   const type = config.colored ? 'colored' : 'bw'
@@ -15,6 +17,7 @@ export default async function* (fileEntry) {
       await print(fileEntry, {
         'page-ranges': pageRanges[0],
         outputorder: 'reverse',
+        ...scale,
         ...bwAddon,
       })
       await printerStatus[type].becomes('idle')
@@ -22,6 +25,7 @@ export default async function* (fileEntry) {
       await print(fileEntry, {
         'page-ranges': pageRanges[1],
         'orientation-requested': 6,
+        ...scale,
         ...bwAddon,
       })
       await printerStatus[type].becomes('idle')
