@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/KEEER/cp-endpoint.git"
+    "url": "git+https://github.com/KEEER/cloud-print-endpoint.git"
   },
   "keywords": [
     "print",
@@ -18,9 +18,9 @@
   "author": "Alan-Liang",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/KEEER/cp-endpoint/issues"
+    "url": "https://github.com/KEEER/cloud-print-endpoint/issues"
   },
-  "homepage": "https://github.com/KEEER/cp-endpoint#readme",
+  "homepage": "https://github.com/KEEER/cloud-print-endpoint#readme",
   "dependencies": {
     "circular-json": "^0.5.9",
     "dotenv": "^8.1.0",
