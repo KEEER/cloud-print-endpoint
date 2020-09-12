@@ -101,3 +101,17 @@ body {
   width: 100%;
   bottom: 0;
 }
+
+#control-qrcode-wrapper {
+  position: fixed;
+  top: 0;
+  right: 0;
+  text-align: right;
+  padding: 16px;
+}
+#control-qrcode-wrapper p {
+  font-size: 24px;
+  font-weight: 200;
+  margin: 0;
+}
+#control-qrcode { border-radius: 4px; }

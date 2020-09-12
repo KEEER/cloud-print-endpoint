@@ -11,12 +11,13 @@ import logger from 'koa-logger'
 import KoaRouter from 'koa-router'
 import fetch from 'node-fetch'
 import uuid from 'uuid/v4'
-import { HALTED_MESSAGE, REMOTE_BASE, REMOTE_TIMEOUT, JOB_TOKEN_TIMEOUT, DEFAULT_HEADERS } from './consts'
+import { HALTED_MESSAGE, REMOTE_BASE, REMOTE_TIMEOUT, JOB_TOKEN_TIMEOUT, DEFAULT_HEADERS, CONTROL_CODE_TIMEOUT } from './consts'
 import { sign, verify } from './job-token'
 import log from './log'
 import { PrintConfiguration } from './print-configuration'
 import { printerStatus, printerMessage } from './status'
 import { pathFromName, db, getJobToken, spawnScript, useTimeout, normalizeError } from './util'
+import { randomBytes } from 'crypto'
 
 const app = new Koa()
 
@@ -53,12 +54,124 @@ router.get('/', ctx => {
   <!doctype html>
   <html>
     <body>
+      <h1>Manual file uploading</h1>
       <form action="/job" enctype="multipart/form-data" method="post">
       <textarea name="token"></textarea>
       <input type="file" name="file">
       <button type="submit">Upload</button>
     </body>
   </html>`
+})
+
+const createControlCode = () => randomBytes(8).toString('hex')
+const controlCodes = Array(4).fill(0).map(createControlCode)
+export const listenControlCodeUpdate = f => setInterval(() => {
+  const code = createControlCode()
+  controlCodes.push(code)
+  controlCodes.shift()
+  f(code)
+}, CONTROL_CODE_TIMEOUT, f(controlCodes[controlCodes.length - 1]))
+const inputListeners = []
+export const listenInput = f => inputListeners.push(f)
+router.post('/control/:code', async ctx => {
+  if (!controlCodes.includes(ctx.params.code)) return ctx.status = 401
+  ctx.status = 200
+  const code = ctx.request.body
+  const callback = x => inputListeners.forEach(f => f(x))
+  if (code === '←') return callback('BKSP')
+  if (code === '✓') return callback('ENTER')
+  if (code.length !== 1) return ctx.status = 400
+  if (code > '9' || code < '0') return ctx.status = 400
+  return callback(Number(code))
+})
+router.get('/control/:code', async ctx => {
+  if (!controlCodes.includes(ctx.params.code)) return ctx.status = 401
+  return ctx.body = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <title>无接触输入 | Cloud Print</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    img { border: none; }
+    table { border-collapse: collapse; }
+    a { text-decoration: none; }
+    a:hover, a:active, a:focus { text-decoration: underline; }
+
+    body {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background-color: #fcfffc;
+      color: #222;
+      border-top: 4px solid #f57c00;
+    }
+    .cell {
+      display: inline-block;
+      width: 25vw;
+      height: 25vw;
+      margin: 1vw;
+      font-size: 8vw;
+      border-radius: 50%;
+      border: 1px solid #d3d5d3;
+      transition: background-color .2s ease;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+    }
+    .cell:hover, .cell:active {
+      background: #d3d5d3;
+    }
+    </style>
+  </head>
+  <body>
+    <main>
+      <noscript>
+        无接触输入需要您的浏览器启用 JavaScript。
+      </noscript>
+      <div id="panel">
+        <div class="col">
+          <div class="cell">1</div>
+          <div class="cell">2</div>
+          <div class="cell">3</div>
+        </div>
+        <div class="col">
+          <div class="cell">4</div>
+          <div class="cell">5</div>
+          <div class="cell">6</div>
+        </div>
+        <div class="col">
+          <div class="cell">7</div>
+          <div class="cell">8</div>
+          <div class="cell">9</div>
+        </div>
+        <div class="col">
+          <div class="cell">←</div>
+          <div class="cell">0</div>
+          <div class="cell">✓</div>
+        </div>
+      </div>
+    </main>
+    <script>
+    var panel = document.getElementById('panel')
+    var cells = panel.querySelectorAll('.cell')
+    for (var i = 0; i < cells.length; i++) listen(cells[i])
+    function listen (el) {
+      el.addEventListener('click', function () {
+        fetch(location.href, { method: 'post', body: el.innerText })
+          .then(function (res) { if (res.status === 401) alert('会话超时,请重新扫描二维码') })
+          .catch(function () { alert('发生错误，请重试') })
+      })
+    }
+    </script>
+  </body>
+  </html>
+  `
 })
 
 router.post('/job', getJobToken, async ctx => {

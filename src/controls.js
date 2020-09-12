@@ -6,6 +6,7 @@
 
 // native modules cannot be `import`ed
 const { ipcRenderer } = require('electron')
+const QRCode = require('qrcode-svg')
 import { CODE_DIGITS, ADMIN_PASSWORD, CODE_TIMEOUT } from './consts.js'
 
 const $ = function (name) { return document.querySelector(name) }
@@ -23,6 +24,7 @@ const adminPasswordEl = $('#admin-password')
 const adminEl = $('#admin')
 const adminResponseEl = $('#admin-response')
 const adminInputEl = $('#admin-input')
+const controlQrcodeEl = $('#control-qrcode')
 
 let codeTimeoutId = null
 
@@ -114,6 +116,33 @@ let adminStroke = 0
 let adminStrokeTime = 0
 let isInAdmin = false
 
+const BKSP = 'BKSP'
+const ENTER = 'ENTER'
+function handleInput (input) {
+  if (codeAreaEl.style.display === 'none') {
+    if (input === ENTER) {
+      const event = new Event('keydown')
+      event.keyCode = 0x0d
+      document.dispatchEvent(event)
+    }
+    return
+  }
+  if (typeof input === 'number') {
+    codeEls[code.length].innerText = input
+    code.push(input)
+    if (codeTimeoutId !== null) clearTimeout(codeTimeoutId)
+    codeTimeoutId = setTimeout(clearCode, CODE_TIMEOUT)
+    if (code.length === CODE_DIGITS) ipcRenderer.send('print-preview', code.join(''))
+  }
+  if (input === BKSP) {
+    if (code.length === 0) return
+    codeEls[code.length - 1].innerText = ''
+    code.pop()
+    hideFilename()
+  }
+  if (input === ENTER) ipcRenderer.send('print', code.join(''))
+}
+
 function handleCode (e) {
   e.preventDefault()
   console.log('Pressed 0x' + e.keyCode.toString(16))
@@ -121,23 +150,10 @@ function handleCode (e) {
   if (e.keyCode >= 0x30 && e.keyCode <= 0x39 || e.keyCode >= 0x60 && e.keyCode <= 0x69) { // number
     if (code.length === CODE_DIGITS) return
     const number = e.keyCode - (e.keyCode > 0x50 ? 0x60 : 0x30)
-    codeEls[code.length].innerText = number
-    code.push(number)
-    if (codeTimeoutId !== null) clearTimeout(codeTimeoutId)
-    codeTimeoutId = setTimeout(clearCode, CODE_TIMEOUT)
-    if (code.length === CODE_DIGITS) {
-      ipcRenderer.send('print-preview', code.join(''))
-    }
+    handleInput(number)
   }
-  if (e.keyCode === 0x08 || e.keyCode === 0x2e) { // bksp
-    if (code.length === 0) return
-    codeEls[code.length - 1].innerText = ''
-    code.pop()
-    hideFilename()
-  }
-  if (e.keyCode === 0x0d && code.length === CODE_DIGITS) { // enter
-    ipcRenderer.send('print', code.join(''))
-  }
+  if (e.keyCode === 0x08 || e.keyCode === 0x2e) handleInput(BKSP)
+  if (e.keyCode === 0x0d && code.length === CODE_DIGITS) handleInput(ENTER)
 }
 
 document.addEventListener('keydown', function (e) {
@@ -211,6 +227,10 @@ function handleError (e) {
   }
 }
 
+function updateControlUrl (url) {
+  controlQrcodeEl.innerHTML = new QRCode({ content: url }).svg()
+}
+
 document.addEventListener('keydown', handleCode)
 
 ipcRenderer.on('show-info', (_e, ...args) => showInfo(...args))
@@ -221,5 +241,7 @@ ipcRenderer.on('show-info', (_e, ...args) => showInfo(...args))
   .on('admin', (_e, ...args) => showAdminInfo(...args))
   .on('enter-admin', (_e, ...args) => enterAdmin(...args))
   .on('exit-admin', exitAdmin)
+  .on('handle-input', (_e, ...args) => handleInput(...args))
+  .on('control-url', (_e, ...args) => updateControlUrl(...args))
 
 ipcRenderer.send('ready')

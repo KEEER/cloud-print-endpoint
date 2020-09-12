@@ -57,7 +57,7 @@ export const JOIN_STATUS = ({ bw, colored }) => `黑白打印机${MESSAGE_FROM_S
 /** Password for accessing the administration interface. */
 export const { ADMIN_PASSWORD } = process.env
 /** After how much time would we consider connection timeout. */
-export const REMOTE_TIMEOUT = 5 * 1000 // 5 secs
+export const REMOTE_TIMEOUT = 15 * 1000 // 15 secs
 /** Log file to write to. */
 export const { LOGFILE } = process.env
 /** Strings to be displayed. */
@@ -94,3 +94,5 @@ export const PRINT_TIMEOUT = 15 * 60 * 1000 // 15 minutes
 export const CODE_TIMEOUT = 15 * 1000 // 15 secs
 /** Default headers to be sent on `fetch()`. */
 export const DEFAULT_HEADERS = Object.freeze({ 'User-Agent': 'KEEER Cloud Print/0.1 node-fetch/1.0' })
+/** Timeout of remote code input. */
+export const CONTROL_CODE_TIMEOUT = 30 * 1000 // 30 secs
