@@ -2,7 +2,7 @@ import { PrintConfiguration } from '../../../print-configuration'
 import { printerStatus } from '../../../status'
 import { print } from '../../../util'
 
-const scale = { 'scale-to-fit': true }
+const scale = { 'fit-to-page': true }
 
 export default async function* (fileEntry) {
   const config = new PrintConfiguration(fileEntry.config)
@@ -33,7 +33,7 @@ export default async function* (fileEntry) {
     }
   } else {
     yield 'start'
-    await print(fileEntry, { n: copies, ...bwAddon })
+    await print(fileEntry, { n: copies, ...scale, ...bwAddon })
     await printerStatus[type].becomes('idle')
     yield 'done'
   }

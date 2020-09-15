@@ -2,7 +2,7 @@ import { PrintConfiguration } from '../../../print-configuration'
 import { printerStatus } from '../../../status'
 import { print } from '../../../util'
 
-const scale = { 'scale-to-fit': true }
+const scale = { 'fit-to-page': true }
 
 export default async function* (fileEntry) {
   const config = new PrintConfiguration(fileEntry.config)
@@ -41,6 +41,7 @@ export default async function* (fileEntry) {
     await print(fileEntry, {
       n: copies,
       outputorder: 'reverse',
+      ...scale,
       ...bwAddon,
     })
     await printerStatus[type].becomes('idle')
