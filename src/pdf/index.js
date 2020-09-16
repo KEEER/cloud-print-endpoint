@@ -9,7 +9,7 @@ if(!file) {
     pdfParser.loadPDF(file)
     const res = await new Promise((resolve, reject) => {
       pdfParser.on('pdfParser_dataReady', resolve)
-      setTimeout(reject, 2000, 'timeout')
+      setTimeout(reject, 15 * 1000, 'timeout')
     })
     console.log(JSON.stringify({
       status: 0,

@@ -196,7 +196,7 @@ router.post('/job', getJobToken, async ctx => {
   }
   const info = { file: file.name, id, time: Date.now(), code, config: new PrintConfiguration() }
   try {
-    info.pageCount = await spawnScript('pdf', [pathFromName(info.id)])
+    info.pageCount = await spawnScript('pdf', [pathFromName(info.id)], 15 * 1000)
   } catch (e) {
     log(`[WARN] pdf parsing ${normalizeError(e)}`)
     return ctx.sendError(e)
