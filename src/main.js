@@ -1,6 +1,6 @@
 /** @module main */
 
-import { listen, listenInput, listenControlCodeUpdate } from './server'
+import { listen, inputEvents, controlCodeEvents, getControlCode } from './server'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { promises as fs } from 'fs'
 import fetch from 'node-fetch'
@@ -11,7 +11,7 @@ import log from './log'
 import { PrintConfiguration } from './print-configuration'
 import printJob from './printer/print-job'
 import { printerStatus } from './status'
-import { isValidCode, db, useTimeout, normalizeError, ipAddress } from './util'
+import { isValidCode, db, useTimeout, normalizeError, ipAddress, networkEvents } from './util'
 
 let win
 
@@ -147,8 +147,13 @@ ipcMain.once('ready', e => {
       e.reply('show-info', './img/error.svg', STRINGS.printingError, s.message || s.state)
     })
   }
-  listenInput(input => e.reply('handle-input', input))
-  listenControlCodeUpdate(code => e.reply('control-url', `http://${ipAddress}/control/${code}`))
+  const updateControlUrl = () => e.reply('control-url', `http://${ipAddress}/control/${getControlCode()}`)
+  updateControlUrl()
+  inputEvents.on('input', input => e.reply('handle-input', input))
+  controlCodeEvents.on('update', updateControlUrl)
+  networkEvents.on('update', updateControlUrl)
+  networkEvents.on('disconnected', () => e.reply('network-error'))
+  networkEvents.on('connected', () => e.reply('network-connected'))
 }).on('print', (e, code) => handlePrintJob(e, code))
   .on('print-preview', async (e, code) => {
   log(`[DEBUG] receiving print preview ${code}`)

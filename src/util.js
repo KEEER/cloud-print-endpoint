@@ -3,6 +3,7 @@
 import CJSON from 'circular-json'
 import { spawn } from 'child_process'
 import { networkInterfaces } from 'os'
+import { EventEmitter } from 'events'
 import path from 'path'
 import Datastore from 'nedb-promise'
 import fetch from 'node-fetch'
@@ -29,7 +30,8 @@ export function isValidCode (code) {
 }
 
 /** Network address of local machine. */
-export let ipAddress
+export let ipAddress = null
+export const networkEvents = new EventEmitter()
 /** Check if IP has changed and report to remote server. */
 const updateIp = async () => {
   const newIp = Object.values(networkInterfaces())
@@ -38,7 +40,17 @@ const updateIp = async () => {
     .map(a => a.address)[0]
   if (ipAddress !== newIp) {
     // handle IP change
+    if (ipAddress === undefined) {
+      log('[INFO] updating ip: connection is back')
+      networkEvents.emit('connected')
+    }
     ipAddress = newIp
+    if (ipAddress === undefined) {
+      log('[ERROR] updating ip: no internet connection')
+      networkEvents.emit('disconnected')
+      return
+    }
+    networkEvents.emit('update', ipAddress)
     try {
       const res = await fetch(new URL('/_api/printer-ip', REMOTE_BASE), {
         method: 'post',

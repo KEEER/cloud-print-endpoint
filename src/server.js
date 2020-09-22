@@ -18,6 +18,7 @@ import { PrintConfiguration } from './print-configuration'
 import { printerStatus, printerMessage } from './status'
 import { pathFromName, db, getJobToken, spawnScript, useTimeout, normalizeError } from './util'
 import { randomBytes } from 'crypto'
+import { EventEmitter } from 'events'
 
 const app = new Koa()
 
@@ -65,24 +66,25 @@ router.get('/', ctx => {
 
 const createControlCode = () => randomBytes(8).toString('hex')
 const controlCodes = Array(4).fill(0).map(createControlCode)
-export const listenControlCodeUpdate = f => setInterval(() => {
+export const getControlCode = () => controlCodes[controlCodes.length - 1]
+export const controlCodeEvents = new EventEmitter()
+setInterval(() => {
   const code = createControlCode()
   controlCodes.push(code)
   controlCodes.shift()
-  f(code)
-}, CONTROL_CODE_TIMEOUT, f(controlCodes[controlCodes.length - 1]))
-const inputListeners = []
-export const listenInput = f => inputListeners.push(f)
+  controlCodeEvents.emit('update', code)
+}, CONTROL_CODE_TIMEOUT)
+
+export const inputEvents = new EventEmitter()
 router.post('/control/:code', async ctx => {
   if (!controlCodes.includes(ctx.params.code)) return ctx.status = 401
   ctx.status = 200
   const code = ctx.request.body
-  const callback = x => inputListeners.forEach(f => f(x))
-  if (code === '←') return callback('BKSP')
-  if (code === '✓') return callback('ENTER')
+  if (code === '←') return inputEvents.emit('input', 'BKSP')
+  if (code === '✓') return inputEvents.emit('input', 'ENTER')
   if (code.length !== 1) return ctx.status = 400
   if (code > '9' || code < '0') return ctx.status = 400
-  return callback(Number(code))
+  return inputEvents.emit('input', Number(code))
 })
 router.get('/control/:code', async ctx => {
   if (!controlCodes.includes(ctx.params.code)) return ctx.status = 401

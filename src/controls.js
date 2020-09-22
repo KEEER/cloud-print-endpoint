@@ -25,6 +25,7 @@ const adminEl = $('#admin')
 const adminResponseEl = $('#admin-response')
 const adminInputEl = $('#admin-input')
 const controlQrcodeEl = $('#control-qrcode')
+const networkErrorEl = $('#network-error')
 
 let codeTimeoutId = null
 
@@ -231,6 +232,9 @@ function updateControlUrl (url) {
   controlQrcodeEl.innerHTML = new QRCode({ content: url }).svg()
 }
 
+const networkError = () => networkErrorEl.classList.remove('hidden')
+const networkConnected = () => networkErrorEl.classList.add('hidden')
+
 document.addEventListener('keydown', handleCode)
 
 ipcRenderer.on('show-info', (_e, ...args) => showInfo(...args))
@@ -243,5 +247,7 @@ ipcRenderer.on('show-info', (_e, ...args) => showInfo(...args))
   .on('exit-admin', exitAdmin)
   .on('handle-input', (_e, ...args) => handleInput(...args))
   .on('control-url', (_e, ...args) => updateControlUrl(...args))
+  .on('network-error', networkError)
+  .on('network-connected', networkConnected)
 
 ipcRenderer.send('ready')
