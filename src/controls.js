@@ -190,7 +190,7 @@ function enterAdmin (msg) {
   adminInputEl.focus()
   document.removeEventListener('keydown', handleCode)
   document.removeEventListener('keydown', handleError)
-  if (!msg) ipcRenderer.send('admin', '0')
+  if (!msg) ipcRenderer.send('admin', 'login')
   else adminResponseEl.innerText = msg
 }
 
