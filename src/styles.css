@@ -9,17 +9,9 @@ body {
   font-family: 'URW Gothic L', sans-serif;
 }
 
-.hidden {
-  display: none;
-}
-
-.pad {
-  flex: auto;
-}
-
-.container {
-  display: flex;
-}
+.hidden { display: none !important; }
+.pad { flex: auto; }
+.container { display: flex; }
 
 .num {
   width: 116px;
@@ -114,7 +106,7 @@ body {
   font-weight: 200;
   margin: 0;
 }
-#control-qrcode { border-radius: 4px; }
+#control-qrcode > * { border-radius: 4px; }
 
 #network-error {
   position: fixed;
@@ -126,5 +118,6 @@ body {
   font-weight: 900;
   display: flex;
   align-items: center;
+  border-radius: 4px;
 }
 #network-error img { margin-right: 12px; }

@@ -24,6 +24,7 @@ const adminPasswordEl = $('#admin-password')
 const adminEl = $('#admin')
 const adminResponseEl = $('#admin-response')
 const adminInputEl = $('#admin-input')
+const controlQrcodeWrapperEl = $('#control-qrcode-wrapper')
 const controlQrcodeEl = $('#control-qrcode')
 const networkErrorEl = $('#network-error')
 
@@ -232,8 +233,14 @@ function updateControlUrl (url) {
   controlQrcodeEl.innerHTML = new QRCode({ content: url }).svg()
 }
 
-const networkError = () => networkErrorEl.classList.remove('hidden')
-const networkConnected = () => networkErrorEl.classList.add('hidden')
+const networkError = () => {
+  networkErrorEl.classList.remove('hidden')
+  controlQrcodeWrapperEl.classList.add('hidden')
+}
+const networkConnected = () => {
+  networkErrorEl.classList.add('hidden')
+  controlQrcodeWrapperEl.classList.remove('hidden')
+}
 
 document.addEventListener('keydown', handleCode)
 
