@@ -129,6 +129,7 @@ router.get('/control/:code', async ctx => {
     .cell:hover, .cell:active {
       background: #d3d5d3;
     }
+    #tip { position: fixed; bottom: 16px; left: 16px; }
     </style>
   </head>
   <body>
@@ -158,6 +159,7 @@ router.get('/control/:code', async ctx => {
           <div class="cell">✓</div>
         </div>
       </div>
+      <div id="tip">新用户？<a href="https://print.keeer.net/welcome">点击这里</a></div>
     </main>
     <script>
     var panel = document.getElementById('panel')

@@ -118,10 +118,13 @@ body {
 
 #network-error {
   position: fixed;
-  bottom: 0;
-  left: 0;
+  bottom: 32px;
+  left: 32px;
   padding: 16px;
-  color: red;
+  background-color: red;
   font-size: 32px;
-  font-weight: 200;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
 }
+#network-error img { margin-right: 12px; }

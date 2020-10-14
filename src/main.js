@@ -153,6 +153,7 @@ ipcMain.once('ready', e => {
   controlCodeEvents.on('update', updateControlUrl)
   networkEvents.on('update', updateControlUrl)
   networkEvents.on('disconnected', () => e.reply('network-error'))
+  if (!ipAddress) e.reply('network-error')
   networkEvents.on('connected', () => e.reply('network-connected'))
 }).on('print', (e, code) => handlePrintJob(e, code))
   .on('print-preview', async (e, code) => {
