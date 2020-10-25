@@ -122,9 +122,10 @@ const handlePrintJob = async (e, code, dontPay) => {
                 .replace(/:currentCopies:/g, res[1] + 1)
             } else message = STRINGS.printingOkHintAllDone
           } else message = STRINGS.printingOkHint
-          e.reply('show-once', './img/done.svg', STRINGS.printingOk, message)
+          const notLastCopy = fileEntry.config.copies > 1 && Array.isArray(res) && res[1] !== fileEntry.config.copies - 1
+          e.reply('show-once', './img/done.svg', STRINGS.printingOk, message, !notLastCopy)
           await new Promise(resolve => ipcMain.once('hide-info', resolve))
-          if (Array.isArray(res) && res[1] !== fileEntry.config.copies - 1) {
+          if (notLastCopy) {
             res[1]++
             showPrintingMessage(res)
           }

@@ -88,12 +88,23 @@ function showInfo (imageSrc, title, subtitle) {
  * @param {string} imageSrc `src` attribute of image, relative to `/src`
  * @param {string} title title to be shown
  * @param {string} subtitle subtitle to be shown
+ * @param {number|boolean}
  * @example win.webContents.send('show-once', './img/done.svg', 'Print Done', 'Click enter to continue')
  * @example event.reply('show-once', './img/done.svg', 'Print Done', 'Click enter to continue')
  */
-function showOnce (imageSrc, title, subtitle) {
+function showOnce (imageSrc, title, subtitle, timeout) {
   showInfo(imageSrc, title, subtitle)
-  document.addEventListener('keydown', handleError)
+  let closed = false
+  document.addEventListener('keydown', e => {
+    if (closed || isInAdmin) return
+    if (handleError(e)) closed = true
+  })
+  if (timeout) {
+    setTimeout(() => {
+      if (closed) return
+      hideInfo()
+    }, timeout === true ? 10000 : timeout)
+  }
 }
 
 /**
@@ -226,6 +237,7 @@ function handleError (e) {
     document.removeEventListener('keydown', handleError)
     ipcRenderer.send('hide-info')
     hideInfo()
+    return true
   }
 }
 
