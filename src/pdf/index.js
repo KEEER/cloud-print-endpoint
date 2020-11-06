@@ -5,20 +5,24 @@ if(!file) {
 }
 ;(async () => {
   try {
-    const pdfParser = new (require('pdf2json'))()
-    pdfParser.loadPDF(file)
+    const pdfParser = require('pdfinfo')(file)
     const res = await new Promise((resolve, reject) => {
-      pdfParser.on('pdfParser_dataReady', resolve)
+      pdfParser.info((err, meta) => {
+        if (err) return reject(err)
+        return resolve(meta)
+      })
       setTimeout(reject, 15 * 1000, 'timeout')
     })
     console.log(JSON.stringify({
       status: 0,
-      response: res.formImage.Pages.length,
+      response: res.pages,
     }))
+    process.exit(0)
   } catch (e) {
     console.log(JSON.stringify({
       status: 1,
       error: e.toString(),
+      file,
     }))
     process.exit(1)
   }

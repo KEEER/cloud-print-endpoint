@@ -36,7 +36,7 @@
     "nedb-promise": "^2.0.1",
     "node-fetch": "^2.6.0",
     "node-native-printer": "git+https://github.com/KEEER/node-native-printer-dist.git",
-    "pdf2json": "^1.1.8",
+    "pdfinfo": "0.0.3",
     "qrcode-svg": "^1.1.0",
     "strip-ansi": "^5.2.0",
     "uuid": "^3.3.3"
