@@ -50,6 +50,7 @@ const handlePrintJob = async (e, code, dontPay) => {
 
   if (!dontPay) {
     if (fileEntry.printed) return 'fileNotFound'
+    if (!ipAddress) return e.reply('show-once', './img/error.svg', STRINGS.cannotPayOffline, STRINGS.cannotPayOfflineHint)
     e.reply('show-info', './img/print.svg', STRINGS.paying, STRINGS.payingWait)
     const configObj = new PrintConfiguration(fileEntry.config).toJSON()
     configObj['page-count'] = fileEntry.pageCount * configObj.copies

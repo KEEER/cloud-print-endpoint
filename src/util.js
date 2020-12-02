@@ -31,6 +31,12 @@ export function isValidCode (code) {
 
 /** Network address of local machine. */
 export let ipAddress = null
+/**
+ * EventEmitter to listen on network connectivity change.
+ * @event connected when connection is back
+ * @event disconnected when connection is lost
+ * @event update when IP address changes
+ */
 export const networkEvents = new EventEmitter()
 /** Check if IP has changed and report to remote server. */
 const updateIp = async () => {
@@ -68,6 +74,7 @@ const updateIp = async () => {
   }
 }
 setInterval(updateIp, IP_UPDATE_INTERVAL)
+// allow listeners to be set before firing the first update event
 setTimeout(updateIp, 1)
 
 /**

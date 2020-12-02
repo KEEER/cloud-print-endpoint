@@ -5,7 +5,7 @@ import fetch from 'node-fetch'
 import * as consts from './consts'
 import log from './log'
 import { sign } from './job-token'
-import { spawnScript, useTimeout, normalizeError } from './util'
+import { spawnScript, useTimeout, normalizeError, ipAddress } from './util'
 
 const { BW_PRINTER_NAME, BW_PRINTER_PROFILE, STATUS_UPDATE_INTERVAL, COLORED_PRINTER_PROFILE, COLORED_PRINTER_NAME, JOIN_STATUS, PRINT_TIMEOUT, REMOTE_BASE, PRINTER_ID, REMOTE_TIMEOUT, DEFAULT_HEADERS } = consts
 
@@ -89,6 +89,7 @@ const updateStatus = async (type, printerName, printerProfile) => {
       printerStatus[type].state = newStatus.state
     }
   } catch (e) {
+    if (e === undefined && !ipAddress) return
     log(`[ERROR] update ${type} status ${normalizeError(e)}`)
   }
 }

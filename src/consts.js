@@ -72,6 +72,8 @@ export const STRINGS = Object.freeze({
   noSuchCodeCheck: '请检查后重新输入。',
   paying: '正在支付',
   payingWait: '请稍等……',
+  cannotPayOffline: '无法支付',
+  cannotPayOfflineHint: '此服务器暂时无法连接网络，无法完成支付。',
   pressEnter: '请按回车键以继续',
   printing: '正在打印中，请稍候',
   printingError: '出现错误',
