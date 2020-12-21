@@ -28,6 +28,8 @@ const controlQrcodeWrapperEl = $('#control-qrcode-wrapper')
 const controlQrcodeEl = $('#control-qrcode')
 const networkErrorEl = $('#network-error')
 
+let inputHandlers = new Set()
+
 let codeTimeoutId = null
 
 function clearCode () {
@@ -80,7 +82,7 @@ function showInfo (imageSrc, title, subtitle) {
   codeAreaEl.style.display = 'none'
   infoAreaEl.style.display = ''
 
-  document.removeEventListener('keydown', handleCode)
+  inputHandlers.delete('code')
 }
 
 /**
@@ -95,8 +97,8 @@ function showInfo (imageSrc, title, subtitle) {
 function showOnce (imageSrc, title, subtitle, timeout) {
   showInfo(imageSrc, title, subtitle)
   let closed = false
-  document.addEventListener('keydown', e => {
-    if (closed || isInAdmin) return
+  inputHandlers.add(e => {
+    if (closed || adminState.activated) return
     if (handleError(e)) closed = true
   })
   if (timeout) {
@@ -122,12 +124,12 @@ function hideInfo () {
   codeAreaEl.style.display = ''
   infoAreaEl.style.display = 'none'
 
-  document.addEventListener('keydown', handleCode)
+  inputHandlers.add('code')
 }
 
-let adminStroke = 0
-let adminStrokeTime = 0
-let isInAdmin = false
+let adminState
+const resetAdminState = () => adminState = { lastStroke: 0, strokes: 0, activated: 0, inputHandlers: null }
+resetAdminState()
 
 const BKSP = 'BKSP'
 const ENTER = 'ENTER'
@@ -158,7 +160,6 @@ function handleInput (input) {
 
 function handleCode (e) {
   e.preventDefault()
-  console.log('Pressed 0x' + e.keyCode.toString(16))
   if (e.keyCode === 0x74) location.reload() // F5
   if (e.keyCode >= 0x30 && e.keyCode <= 0x39 || e.keyCode >= 0x60 && e.keyCode <= 0x69) { // number
     if (code.length === CODE_DIGITS) return
@@ -169,49 +170,57 @@ function handleCode (e) {
   if (e.keyCode === 0x0d && code.length === CODE_DIGITS) handleInput(ENTER)
 }
 
-document.addEventListener('keydown', function (e) {
-  if (isInAdmin) return
-  if (e.keyCode === 0xbf || e.keyCode === 0x6f) { // slash
-    e.preventDefault()
-    if (adminStrokeTime < Date.now() - 4000) {
-      adminStroke = 0
-      adminStrokeTime = Date.now()
+document.addEventListener('keydown', e => {
+  if (!adminState.activated) {
+    if (e.keyCode === 0xbf || e.keyCode === 0x6f) { // slash
+      e.preventDefault()
+      if (adminState.lastStroke < Date.now() - 2000) resetAdminState()
+      adminState.strokes++
+      adminState.lastStroke = Date.now()
+      if (adminState.strokes === 4) showAdminPassword()
+      return
     }
-    adminStroke++
-    if (adminStroke === 4) {
-      adminPasswordEl.classList.remove('hidden')
-      adminPasswordEl.focus()
-      document.removeEventListener('keydown', handleCode)
-      setTimeout(() => {
-        if (isInAdmin) return
-        document.addEventListener('keydown', handleCode)
-        adminPasswordEl.value = ''
-        adminPasswordEl.classList.add('hidden')
-        adminPasswordEl.blur()
-      }, 10 * 1000)
-    }
+  }
+  for (const fn of inputHandlers) {
+    if (typeof fn === 'function') fn(e)
+    else if (typeof fn === 'string') {
+      if (fn === 'code') handleCode(e)
+      else console.error('Unknown input handler: ' + fn)
+    } else console.error('Unknown input handler', fn)
   }
 })
 
+const showAdminPassword = () => {
+  adminState.activated = 'password'
+  adminPasswordEl.classList.remove('hidden')
+  adminPasswordEl.focus()
+  const currentAdminState = adminState
+  adminState.inputHandlers = inputHandlers
+  inputHandlers = new Set()
+  setTimeout(() => {
+    if (adminState !== currentAdminState || adminState.activated !== 'password') return
+    inputHandlers = adminState.inputHandlers
+    resetAdminState()
+    adminPasswordEl.value = ''
+    adminPasswordEl.classList.add('hidden')
+    adminPasswordEl.blur()
+  }, 10 * 1000)
+}
+
 /** Enters admin interface. */
 function enterAdmin (msg) {
-  isInAdmin = true
+  if (adminState.activated !== 'password') adminState.inputHandlers = inputHandlers
+  adminState.activated = 'activated'
   adminPasswordEl.value = ''
   adminPasswordEl.classList.add('hidden')
   adminEl.classList.remove('hidden')
   adminInputEl.focus()
-  document.removeEventListener('keydown', handleCode)
-  document.removeEventListener('keydown', handleError)
   if (!msg) ipcRenderer.send('admin', 'login')
   else adminResponseEl.innerText = msg
 }
 
 adminPasswordEl.addEventListener('keydown', e => {
-  if (e.keyCode === 0x0d) { // enter
-    if (adminPasswordEl.value === ADMIN_PASSWORD) {
-      enterAdmin()
-    }
-  }
+  if (e.keyCode === 0x0d && adminPasswordEl.value === ADMIN_PASSWORD) enterAdmin()
 })
 
 adminInputEl.addEventListener('keyup', e => {
@@ -226,15 +235,14 @@ function showAdminInfo (msg) {
 }
 
 function exitAdmin () {
-  isInAdmin = false
+  if (adminState.inputHandlers) inputHandlers = adminState.inputHandlers
+  resetAdminState()
   adminEl.classList.add('hidden')
-  document.addEventListener('keydown', handleCode)
 }
 
 function handleError (e) {
   e.preventDefault()
   if (e.keyCode === 0x0d) { // enter
-    document.removeEventListener('keydown', handleError)
     ipcRenderer.send('hide-info')
     hideInfo()
     return true
@@ -254,7 +262,7 @@ const networkConnected = () => {
   controlQrcodeWrapperEl.classList.remove('hidden')
 }
 
-document.addEventListener('keydown', handleCode)
+inputHandlers.add('code')
 
 ipcRenderer.on('show-info', (_e, ...args) => showInfo(...args))
   .on('show-once', (_e, ...args) => showOnce(...args))
