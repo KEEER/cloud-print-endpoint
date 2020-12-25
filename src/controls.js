@@ -28,7 +28,7 @@ const controlQrcodeWrapperEl = $('#control-qrcode-wrapper')
 const controlQrcodeEl = $('#control-qrcode')
 const networkErrorEl = $('#network-error')
 
-let inputHandlers = new Set()
+const inputHandlers = new Set()
 
 let codeTimeoutId = null
 
@@ -128,7 +128,7 @@ function hideInfo () {
 }
 
 let adminState
-const resetAdminState = () => adminState = { lastStroke: 0, strokes: 0, activated: 0, inputHandlers: null }
+const resetAdminState = () => adminState = { lastStroke: 0, strokes: 0, activated: 0 }
 resetAdminState()
 
 const BKSP = 'BKSP'
@@ -171,15 +171,14 @@ function handleCode (e) {
 }
 
 document.addEventListener('keydown', e => {
-  if (!adminState.activated) {
-    if (e.keyCode === 0xbf || e.keyCode === 0x6f) { // slash
-      e.preventDefault()
-      if (adminState.lastStroke < Date.now() - 2000) resetAdminState()
-      adminState.strokes++
-      adminState.lastStroke = Date.now()
-      if (adminState.strokes === 4) showAdminPassword()
-      return
-    }
+  if (adminState.activated) return
+  if (e.keyCode === 0xbf || e.keyCode === 0x6f) { // slash
+    e.preventDefault()
+    if (adminState.lastStroke < Date.now() - 2000) resetAdminState()
+    adminState.strokes++
+    adminState.lastStroke = Date.now()
+    if (adminState.strokes === 4) showAdminPassword()
+    return
   }
   for (const fn of inputHandlers) {
     if (typeof fn === 'function') fn(e)
@@ -195,11 +194,8 @@ const showAdminPassword = () => {
   adminPasswordEl.classList.remove('hidden')
   adminPasswordEl.focus()
   const currentAdminState = adminState
-  adminState.inputHandlers = inputHandlers
-  inputHandlers = new Set()
   setTimeout(() => {
     if (adminState !== currentAdminState || adminState.activated !== 'password') return
-    inputHandlers = adminState.inputHandlers
     resetAdminState()
     adminPasswordEl.value = ''
     adminPasswordEl.classList.add('hidden')
@@ -209,7 +205,6 @@ const showAdminPassword = () => {
 
 /** Enters admin interface. */
 function enterAdmin (msg) {
-  if (adminState.activated !== 'password') adminState.inputHandlers = inputHandlers
   adminState.activated = 'activated'
   adminPasswordEl.value = ''
   adminPasswordEl.classList.add('hidden')
@@ -235,7 +230,6 @@ function showAdminInfo (msg) {
 }
 
 function exitAdmin () {
-  if (adminState.inputHandlers) inputHandlers = adminState.inputHandlers
   resetAdminState()
   adminEl.classList.add('hidden')
 }

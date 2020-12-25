@@ -174,14 +174,14 @@ ipcMain.once('ready', e => {
 
     case '2':
       printerStatus.halted = true
-      e.reply('show-info', './img/error.svg', STRINGS.serviceHalt, '')
       e.reply('exit-admin')
+      e.reply('show-info', './img/error.svg', STRINGS.serviceHalt, '')
       break
 
     case '3':
       printerStatus.halted = false
-      e.reply('hide-info')
       e.reply('exit-admin')
+      e.reply('hide-info')
       break
 
     case '4':
@@ -204,8 +204,8 @@ ipcMain.once('ready', e => {
       break
 
     case '6':
-      e.reply('hide-info')
       e.reply('exit-admin')
+      e.reply('hide-info')
       break
 
     case '7':
