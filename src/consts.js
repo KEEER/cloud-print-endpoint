@@ -95,6 +95,6 @@ export const PRINT_TIMEOUT = 15 * 60 * 1000 // 15 minutes
 /** Timeout of code input. */
 export const CODE_TIMEOUT = 15 * 1000 // 15 secs
 /** Default headers to be sent on `fetch()`. */
-export const DEFAULT_HEADERS = Object.freeze({ 'User-Agent': 'KEEER Cloud Print/0.1 node-fetch/1.0' })
+export const DEFAULT_HEADERS = Object.freeze({ 'User-Agent': process.env.USER_AGENT || 'KEEER Cloud Print/0.1 node-fetch/1.0' })
 /** Timeout of remote code input. */
 export const CONTROL_CODE_TIMEOUT = 30 * 1000 // 30 secs
