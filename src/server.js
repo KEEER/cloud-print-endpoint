@@ -16,7 +16,7 @@ import { sign, verify } from './job-token'
 import log from './log'
 import { PrintConfiguration } from './print-configuration'
 import { printerStatus, printerMessage } from './status'
-import { pathFromName, db, getJobToken, spawnScript, useTimeout, normalizeError } from './util'
+import { pathFromName, db, getJobToken, spawnScript, useTimeout, normalizeError, isValidCode } from './util'
 import { randomBytes } from 'crypto'
 import { EventEmitter } from 'events'
 
@@ -218,8 +218,8 @@ router.post('/job', getJobToken, async ctx => {
 
 router.post('/get-configs', async ctx => {
   const { codes, timestamp, sign } = ctx.request.body
-  if (!Array.isArray(codes) || !timestamp || !sign) return ctx.sendError('Invalid form.')
-  if (timestamp + JOB_TOKEN_TIMEOUT < Date.now() / 1000 || !verify(sign, codes.join(','), timestamp)) {
+  if (!Array.isArray(codes) || !codes.every(isValidCode) || !timestamp || !sign) return ctx.sendError('Invalid form.')
+  if (Number(timestamp) + JOB_TOKEN_TIMEOUT < Date.now() / 1000 || !verify(sign, codes.join(','), timestamp)) {
     return ctx.sendError('Invalid signature.')
   }
   const fileEntries = await Promise.all(codes.map(code => db.findOne({ code })))
